@@ -178,6 +178,11 @@
     color:var(--muted);font-size:12.5px;line-height:1.5;
   }
   .login-note b{color:var(--ink);}
+  .login-error{
+    padding:11px 14px;border-radius:10px;background:var(--danger-wash);color:var(--danger);
+    font-size:13px;line-height:1.4;margin-bottom:16px;
+  }
+  .btn-primary.loading{opacity:.7;cursor:wait;}
 
   /* ---------- Dashboard ---------- */
   .greeting{font-size:13px;color:var(--muted);}
@@ -488,6 +493,7 @@
         <h1>Let's get this home listed and sold quickly and easily.</h1>
         <p class="login-sub">Walk a property once, capture it right the first time.</p>
         <form id="login-form" novalidate>
+          <div class="login-error" id="login-error" style="display:none;"></div>
           <div class="field" id="field-email">
             <label for="email">Email</label>
             <input id="email" type="email" autocomplete="email" placeholder="you@brokerage.com">
@@ -498,9 +504,9 @@
             <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
             <div class="field-error">Enter a password to continue.</div>
           </div>
-          <button type="submit" class="btn-primary">Log in</button>
+          <button type="submit" class="btn-primary" id="login-submit-btn">Log in</button>
         </form>
-        <div class="login-note"><b>Test build.</b> Any email and password will get you in — real accounts come later.</div>
+        <div class="login-note"><b>Fieldsheet</b> is set up per brokerage — sign in with the account your admin created for you.</div>
       </div>
     </div>
   </section>
@@ -860,8 +866,16 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
+  // ---------- Backend (Supabase) ----------
+  // Project URL + publishable key are safe to expose client-side by design --
+  // Row Level Security on every table (see schema.sql) is what actually
+  // restricts which rows a signed-in user can read or write.
+  var SUPABASE_URL = 'https://ohtiuqghsmuvlthhvkcn.supabase.co';
+  var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_0tz9RnGQB8yiEbpsumkwlw_QPRn-r6L';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
   var STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
   var stateSel = document.getElementById('state');
   stateSel.innerHTML = '<option value="">—</option>' + STATES.map(function(s){return '<option>'+s+'</option>';}).join('');
@@ -1075,6 +1089,28 @@
     });
   }catch(e){}
 
+  function setLoginBusy(busy){
+    var btn = $('login-submit-btn');
+    btn.disabled = busy;
+    btn.classList.toggle('loading', busy);
+    btn.textContent = busy ? 'Signing in…' : 'Log in';
+  }
+
+  function loadAppUserProfile(userId){
+    return sb.from('app_users').select('*').eq('id', userId).single();
+  }
+
+  function applySignedInSession(authUser, profile){
+    session = {
+      userId: authUser.id,
+      email: authUser.email,
+      companyId: profile.company_id,
+      name: profile.name,
+      role: profile.role
+    };
+    persistSession();
+  }
+
   $('login-form').addEventListener('submit', function(e){
     e.preventDefault();
     var email = $('email').value.trim();
@@ -1083,14 +1119,31 @@
     if(!email){ $('field-email').classList.add('has-error'); ok = false; }
     if(!pw){ $('field-password').classList.add('has-error'); ok = false; }
     if(!ok) return;
-    session = { email: email };
-    persistSession();
-    $('password').value = '';
-    renderDashboard();
-    show('screen-dashboard');
+
+    $('login-error').style.display = 'none';
+    setLoginBusy(true);
+
+    sb.auth.signInWithPassword({ email: email, password: pw }).then(function(res){
+      if(res.error) throw res.error;
+      return loadAppUserProfile(res.data.user.id).then(function(profileRes){
+        if(profileRes.error || !profileRes.data){
+          throw new Error('Signed in, but no Fieldsheet profile is set up for this account yet. Ask your admin to add you.');
+        }
+        applySignedInSession(res.data.user, profileRes.data);
+        $('password').value = '';
+        renderDashboard();
+        show('screen-dashboard');
+      });
+    }).catch(function(err){
+      $('login-error').textContent = (err && err.message) ? err.message : 'Something went wrong signing in.';
+      $('login-error').style.display = 'block';
+    }).finally(function(){
+      setLoginBusy(false);
+    });
   });
 
   $('logout-btn').addEventListener('click', function(){
+    sb.auth.signOut();
     session = null;
     localStorage.removeItem(LS_SESSION);
     $('email').value = '';
@@ -1099,7 +1152,7 @@
 
   // ---------- Dashboard ----------
   function renderDashboard(){
-    $('greeting-line').textContent = session && session.email ? ('Signed in as ' + session.email) : 'Welcome back';
+    $('greeting-line').textContent = session && (session.name || session.email) ? ('Signed in as ' + (session.name || session.email)) : 'Welcome back';
     var list = listings.slice().sort(function(a,b){ return b.updatedAt - a.updatedAt; });
     var container = $('listing-list');
     container.innerHTML = '';
@@ -1989,13 +2042,37 @@
   });
 
   // ---------- Boot ----------
-  loadState();
-  if(session && session.email){
-    renderDashboard();
-    show('screen-dashboard');
-  } else {
-    show('screen-login');
+  // Supabase persists the real auth session itself (its own localStorage key).
+  // On load we ask it whether that session is still valid, then re-fetch the
+  // app_users profile fresh rather than trusting our own cached copy -- a
+  // role or company change made elsewhere should take effect on next load.
+  function boot(){
+    loadState(); // still loads `listings` from localStorage for now (photos etc. -- migrates in a later step)
+    sb.auth.getSession().then(function(res){
+      var authSession = res && res.data ? res.data.session : null;
+      if(!authSession){
+        session = null;
+        show('screen-login');
+        return;
+      }
+      return loadAppUserProfile(authSession.user.id).then(function(profileRes){
+        if(profileRes.error || !profileRes.data){
+          // Signed in with Supabase but no matching app_users row (or it was removed) -- treat as logged out.
+          return sb.auth.signOut().then(function(){
+            session = null;
+            show('screen-login');
+          });
+        }
+        applySignedInSession(authSession.user, profileRes.data);
+        renderDashboard();
+        show('screen-dashboard');
+      });
+    }).catch(function(){
+      session = null;
+      show('screen-login');
+    });
   }
+  boot();
 })();
 </script>
 </body>
