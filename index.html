@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Fieldsheet</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -50,11 +55,13 @@
   }
 
   *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
   body{
     background:var(--paper);
     color:var(--ink);
     font-family:'Work Sans',system-ui,-apple-system,sans-serif;
     -webkit-font-smoothing:antialiased;
+    min-height:100vh;
   }
   h1,h2,h3{font-family:'Fraunces',Georgia,serif;text-wrap:balance;margin:0;}
   .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
@@ -257,6 +264,8 @@
   .delete-row{text-align:center;margin-top:4px;}
   .btn-danger-text.confirming{background:var(--danger-wash);border-radius:8px;}
 </style>
+</head>
+<body>
 
 <div class="device">
 
@@ -791,3 +800,5 @@
   }
 })();
 </script>
+</body>
+</html>
