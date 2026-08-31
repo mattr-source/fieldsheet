@@ -438,7 +438,7 @@
             <div class="field price-field">
               <label for="price">List price</label>
               <span class="prefix">$</span>
-              <input id="price" type="number" min="0" step="1000" inputmode="numeric" placeholder="425,000">
+              <input id="price" type="text" inputmode="numeric" placeholder="425,000">
             </div>
           </fieldset>
         </form>
@@ -630,7 +630,7 @@
     $('yearBuilt').value = l.yearBuilt != null ? l.yearBuilt : '';
     $('lotSize').value = l.lotSize != null ? l.lotSize : '';
     $('lotUnit').value = l.lotUnit || 'Acres';
-    $('price').value = l.price != null ? l.price : '';
+    $('price').value = l.price != null ? Number(l.price).toLocaleString('en-US') : '';
     hideSuggestions();
     hideRecordsPanel();
     document.querySelectorAll('.field.auto-filled').forEach(function(f){ f.classList.remove('auto-filled'); });
@@ -758,6 +758,11 @@
     });
   }
 
+  $('price').addEventListener('input', function(){
+    var digits = this.value.replace(/[^\d]/g, '');
+    this.value = digits === '' ? '' : Number(digits).toLocaleString('en-US');
+  });
+
   $('street').addEventListener('input', function(){
     var q = this.value.trim().toLowerCase();
     if(q.length < 2){ hideSuggestions(); return; }
@@ -812,7 +817,7 @@
       yearBuilt: $('yearBuilt').value === '' ? null : Number($('yearBuilt').value),
       lotSize: $('lotSize').value === '' ? null : Number($('lotSize').value),
       lotUnit: $('lotUnit').value,
-      price: $('price').value === '' ? null : Number($('price').value)
+      price: $('price').value === '' ? null : Number($('price').value.replace(/,/g, ''))
     };
     if(existing){
       listings = listings.map(function(l){ return l.id === listing.id ? listing : l; });
