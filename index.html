@@ -136,6 +136,28 @@
   .field-error{color:var(--danger);font-size:12.5px;margin-top:6px;display:none;}
   .field.has-error input,.field.has-error select{border-color:var(--danger);}
   .field.has-error .field-error{display:block;}
+  .field textarea{
+    width:100%;padding:13px 14px;border-radius:10px;
+    border:1px solid var(--line-strong);background:var(--paper-raised);color:var(--ink);
+    font-size:15px;font-family:inherit;resize:vertical;min-height:80px;line-height:1.45;
+  }
+  .field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-wash);}
+  .field-hint{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.4;}
+
+  /* ---------- Features ---------- */
+  .feature-group{margin-bottom:24px;}
+  .feature-chip-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .feature-chip{
+    padding:9px 14px;border-radius:100px;cursor:pointer;
+    border:1px solid var(--line-strong);background:var(--paper-raised);color:var(--ink);
+    font-size:13.5px;font-weight:500;font-family:'Work Sans';
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .feature-chip:hover{border-color:var(--accent);}
+  .feature-chip .check{display:none;color:var(--accent-strong);font-weight:700;}
+  .feature-chip.selected{background:var(--accent-wash);border-color:var(--accent);color:var(--accent-strong);}
+  .feature-chip.selected .check{display:inline;}
+  .feature-count{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-bottom:14px;}
 
   .btn-primary{
     width:100%;padding:14px 18px;border-radius:10px;border:none;cursor:pointer;
@@ -286,8 +308,8 @@
   .room-chip.active{background:var(--accent-wash);border-color:var(--accent);color:var(--accent-strong);font-weight:600;}
   .btn-secondary:disabled{opacity:.45;cursor:not-allowed;}
 
-  .review-actions{display:flex;gap:10px;margin-bottom:8px;}
-  .review-actions .btn-secondary{flex:1;}
+  .review-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;}
+  .review-actions .btn-secondary{flex:1 1 auto;min-width:104px;}
   .delete-row{margin-top:10px;}
   .delete-row .btn-danger{width:100%;}
 
@@ -628,13 +650,45 @@
 
         <div class="soon-panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          <div>Features and the listing description are next — the basics and photos already work.</div>
+          <div>The listing description is next — everything else already works.</div>
         </div>
       </div>
     </div>
     <div class="action-bar">
       <button class="btn-secondary" id="photos-back-action-btn">Back</button>
-      <button class="btn-primary" id="photos-finish-btn">Finish</button>
+      <button class="btn-primary" id="photos-finish-btn">Next</button>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="screen-features" class="screen">
+    <div class="appbar">
+      <button class="back-link" id="features-back-btn">‹ Back</button>
+    </div>
+    <div class="scroll">
+      <div class="pad">
+        <div class="steps" id="steps-features"></div>
+
+        <h2 class="form-title">Features</h2>
+        <p class="form-sub">Pick anything that would make this property more desirable in an ad — pool, views, standout upgrades. Select as many as apply.</p>
+
+        <div id="feature-groups"></div>
+
+        <div class="field">
+          <label for="featureNotes">Anything else worth highlighting? (optional)</label>
+          <textarea id="featureNotes" placeholder="e.g. brand-new roof, solar panels, guest house, deeded beach access..."></textarea>
+          <div class="field-hint">Anything not covered above that a buyer would want to know.</div>
+        </div>
+
+        <div class="soon-panel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <div>The listing description is next — everything else already works.</div>
+        </div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-secondary" id="features-back-action-btn">Back</button>
+      <button class="btn-primary" id="features-finish-btn">Finish</button>
     </div>
   </section>
 
@@ -654,14 +708,19 @@
         <div class="facts-grid" id="facts-grid"></div>
         <div class="section-label" id="review-photo-summary"></div>
 
+        <div class="section-label" style="margin-top:18px;">Features</div>
+        <div class="chip-row" id="review-features-chips"></div>
+        <p class="field-hint" id="review-features-notes"></p>
+
         <div class="soon-panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          <div>Features and the listing description are next — the basics and photos already work.</div>
+          <div>The listing description is next — everything else already works.</div>
         </div>
 
         <div class="review-actions">
           <button class="btn-secondary" id="review-edit-btn">Edit Details</button>
           <button class="btn-secondary" id="review-photos-btn">Photos</button>
+          <button class="btn-secondary" id="review-features-btn">Features</button>
         </div>
         <div class="delete-row">
           <button class="btn-danger" id="review-delete-btn">Delete Listing</button>
@@ -795,10 +854,17 @@
         { label: 'Do I need photos of every room?', answer: 'No — add photos for whatever rooms you have. You can always come back and add more later.' }
       ]
     },
-    'screen-review': {
-      greeting: 'Here’s everything so far. Jump back into Details or Photos anytime, or delete this draft if it was just a test. 🐾',
+    'screen-features': {
+      greeting: "Pick anything that makes this place stand out in an ad — pool, views, a finished basement, whatever applies. It's fine to select several. 🐾",
       tips: [
-        { label: 'What happens after this?', answer: 'Features and the description are next, then Publish — those steps are coming soon.' },
+        { label: 'Why does this matter?', answer: 'These are the details that make a buyer stop scrolling — pools, views, and upgrades are what ads usually lead with.' },
+        { label: "What if it's not on the list?", answer: 'Use the notes box at the bottom — anything from a new roof to deeded water access can go there.' }
+      ]
+    },
+    'screen-review': {
+      greeting: 'Here’s everything so far. Jump back into Details, Photos, or Features anytime, or delete this draft if it was just a test. 🐾',
+      tips: [
+        { label: 'What happens after this?', answer: 'The listing description is next, then Publish — those steps are coming soon.' },
         { label: 'Can I still change the address?', answer: 'Not directly from here yet — a dedicated address edit is on the list. For now, Edit Details covers everything else.' }
       ]
     }
@@ -970,7 +1036,7 @@
     var el = $(containerId);
     if(!el) return;
     el.innerHTML = STEP_LABELS.map(function(label, i){
-      var locked = i > 2;
+      var locked = i > 3;
       var cls = 'step' + (i === activeIndex ? ' active' : '') + (locked ? ' locked' : '');
       var dot = locked
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
@@ -1407,7 +1473,62 @@
 
   $('photos-back-btn').addEventListener('click', openDetailsPage);
   $('photos-back-action-btn').addEventListener('click', openDetailsPage);
-  $('photos-finish-btn').addEventListener('click', function(){ scoutCelebrate('🎉 Draft ready to review!'); openReview(currentId); });
+  $('photos-finish-btn').addEventListener('click', function(){ scoutCelebrate('🎉 Photos saved!'); openFeaturesPage(); });
+
+  // ---------- Features ----------
+  var FEATURE_GROUPS = [
+    { label: 'Views & Outdoor', items: ['Swimming Pool', 'Hot Tub / Spa', 'Mountain View', 'Water View', 'Waterfront Access', 'Fenced Yard', 'Deck / Patio', 'Outdoor Kitchen', 'Fire Pit', 'Mature Landscaping'] },
+    { label: 'Interior Highlights', items: ['Fireplace', 'Hardwood Floors', 'Updated Kitchen', 'Finished Basement', 'Home Office', 'Walk-in Closet(s)', 'Vaulted / High Ceilings', 'Smart Home Features', 'Central Air Conditioning'] },
+    { label: 'Parking & Garage', items: ['Attached Garage', 'Detached Garage', 'RV / Boat Parking', 'Extra Driveway Parking'] },
+    { label: 'Location & Community', items: ['Cul-de-Sac Lot', 'Corner Lot', 'Gated Community', 'Golf Course Community', 'Top-Rated School District', 'Walkable to Downtown', 'New Construction'] }
+  ];
+  var currentFeatureSelection = [];
+
+  function toggleFeature(name, chipEl){
+    var idx = currentFeatureSelection.indexOf(name);
+    if(idx === -1){ currentFeatureSelection.push(name); chipEl.classList.add('selected'); }
+    else { currentFeatureSelection.splice(idx, 1); chipEl.classList.remove('selected'); }
+  }
+
+  function renderFeatureGroups(){
+    var wrap = $('feature-groups');
+    wrap.innerHTML = FEATURE_GROUPS.map(function(group, gi){
+      return '<div class="feature-group">' +
+        '<div class="fieldset-legend">' + escapeHtml(group.label) + '</div>' +
+        '<div class="feature-chip-grid" data-group="' + gi + '">' +
+        group.items.map(function(name){
+          var selected = currentFeatureSelection.indexOf(name) !== -1;
+          return '<button type="button" class="feature-chip' + (selected ? ' selected' : '') + '" data-name="' + escapeHtml(name) + '">' +
+            '<span class="check">✓</span>' + escapeHtml(name) +
+          '</button>';
+        }).join('') +
+        '</div></div>';
+    }).join('');
+    Array.prototype.forEach.call(wrap.querySelectorAll('.feature-chip'), function(chip){
+      chip.addEventListener('click', function(){ toggleFeature(chip.getAttribute('data-name'), chip); });
+    });
+  }
+
+  function openFeaturesPage(){
+    var l = getOrInitListing();
+    currentFeatureSelection = (l && l.features && l.features.selected) ? l.features.selected.slice() : [];
+    renderFeatureGroups();
+    $('featureNotes').value = (l && l.features && l.features.notes) ? l.features.notes : '';
+    renderSteps('steps-features', 3);
+    show('screen-features');
+  }
+
+  $('features-back-btn').addEventListener('click', openPhotosPage);
+  $('features-back-action-btn').addEventListener('click', openPhotosPage);
+  $('features-finish-btn').addEventListener('click', function(){
+    var listing = getOrInitListing();
+    if(!listing){ openAddressPage(); return; }
+    listing.features = { selected: currentFeatureSelection.slice(), notes: $('featureNotes').value.trim() };
+    listing.updatedAt = Date.now();
+    persistListings();
+    scoutCelebrate('🎉 Features saved — draft ready to review!');
+    openReview(currentId);
+  });
 
   // ---------- Review ----------
   function openReview(id){
@@ -1440,6 +1561,12 @@
       return '<div class="fact"><div class="fact-label">' + f[0] + '</div><div class="fact-value">' + escapeHtml(String(f[1])) + '</div></div>';
     }).join('');
 
+    var selectedFeatures = (l.features && l.features.selected) || [];
+    $('review-features-chips').innerHTML = selectedFeatures.length
+      ? selectedFeatures.map(function(f){ return '<span class="chip">' + escapeHtml(f) + '</span>'; }).join('')
+      : '<span class="chip status">No standout features added yet</span>';
+    $('review-features-notes').textContent = (l.features && l.features.notes) ? l.features.notes : '';
+
     show('screen-review');
   }
 
@@ -1451,6 +1578,10 @@
   $('review-photos-btn').addEventListener('click', function(){
     wizardCancelTarget = 'review';
     openPhotosPage();
+  });
+  $('review-features-btn').addEventListener('click', function(){
+    wizardCancelTarget = 'review';
+    openFeaturesPage();
   });
 
   $('review-delete-btn').addEventListener('click', function(){
