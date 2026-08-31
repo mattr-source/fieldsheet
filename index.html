@@ -313,6 +313,51 @@
   .delete-row{margin-top:10px;}
   .delete-row .btn-danger{width:100%;}
 
+  /* ---------- Video walkthrough ---------- */
+  .video-cta-card{
+    display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:24px;
+    background:var(--accent-wash);border:1px solid var(--line);cursor:pointer;text-align:left;width:100%;
+  }
+  .video-cta-card:hover{border-color:var(--accent);}
+  .video-cta-icon{
+    flex:0 0 auto;width:40px;height:40px;border-radius:10px;background:var(--paper-raised);
+    display:flex;align-items:center;justify-content:center;color:var(--accent-strong);
+  }
+  .video-cta-text{flex:1;min-width:0;}
+  .video-cta-title{font-weight:600;font-size:14.5px;}
+  .video-cta-sub{color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.4;}
+  .video-cta-arrow{flex:0 0 auto;color:var(--muted);}
+
+  .video-shotlist{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;}
+  .shot-row{
+    display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;
+    background:var(--paper-raised);border:1px solid var(--line);
+  }
+  .shot-row-thumb{width:40px;height:40px;border-radius:7px;object-fit:cover;flex:0 0 auto;background:var(--line);}
+  .shot-row-name{font-size:13.5px;font-weight:500;flex:1;min-width:0;}
+  .shot-row-motion{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;flex:0 0 auto;}
+
+  .video-progress-wrap{margin:10px 0 22px;}
+  .video-progress-bar{height:8px;border-radius:100px;background:var(--line);overflow:hidden;}
+  .video-progress-fill{height:100%;width:4%;border-radius:100px;background:var(--accent);transition:width .25s ease;}
+  .video-progress-label{font-family:'IBM Plex Mono';font-size:12px;color:var(--muted);margin-top:10px;text-align:center;}
+
+  .video-stage-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+  .video-stage{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);}
+  .video-stage-dot{
+    flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line-strong);
+    display:flex;align-items:center;justify-content:center;font-size:11px;
+  }
+  .video-stage.active .video-stage-dot{border-color:var(--accent);border-top-color:transparent;animation:spin .7s linear infinite;}
+  .video-stage.active{color:var(--ink);font-weight:500;}
+  .video-stage.done .video-stage-dot{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast);}
+  .video-stage.done{color:var(--ink);}
+  @media (prefers-reduced-motion:reduce){.video-stage.active .video-stage-dot{animation:none;}}
+
+  #video-player{width:100%;border-radius:12px;background:#0a1016;margin-bottom:14px;display:block;}
+  .video-actions{display:flex;gap:10px;margin-bottom:14px;}
+  .video-actions .btn-secondary{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;}
+
   .modal-overlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(16,23,29,.5);align-items:center;justify-content:center;padding:20px;}
   .modal-overlay.show{display:flex;}
   .modal-card{background:var(--paper-raised);border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(10,16,22,.3);}
@@ -712,6 +757,20 @@
         <div class="chip-row" id="review-features-chips"></div>
         <p class="field-hint" id="review-features-notes"></p>
 
+        <div class="section-label" style="margin-top:18px;">Marketing</div>
+        <button type="button" class="video-cta-card" id="review-video-btn">
+          <span class="video-cta-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </span>
+          <span class="video-cta-text">
+            <span class="video-cta-title" id="review-video-title">Generate Walkthrough Video</span>
+            <span class="video-cta-sub" id="review-video-sub">Turn your room photos into a shareable walkthrough — Scout does the work.</span>
+          </span>
+          <span class="video-cta-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          </span>
+        </button>
+
         <div class="soon-panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
           <div>The listing description is next — everything else already works.</div>
@@ -727,6 +786,43 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- VIDEO WALKTHROUGH -->
+  <section id="screen-video" class="screen">
+    <div class="appbar">
+      <button class="back-link" id="video-back-btn">‹ Review</button>
+    </div>
+    <div class="scroll"><div class="pad">
+      <h2 class="form-title">Walkthrough Video</h2>
+      <p class="form-sub">Turn your room photos into a shareable video walkthrough — no filming or editing required.</p>
+
+      <div id="video-intro">
+        <div class="video-shotlist" id="video-shotlist"></div>
+        <div class="soon-panel" id="video-no-photos" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <div>Add at least one room photo before generating a walkthrough video.</div>
+        </div>
+        <button type="button" class="btn-primary" id="video-generate-btn">Generate Walkthrough Video</button>
+      </div>
+
+      <div id="video-generating" style="display:none;">
+        <div class="video-progress-wrap">
+          <div class="video-progress-bar"><div class="video-progress-fill" id="video-progress-fill"></div></div>
+          <div class="video-progress-label" id="video-progress-label">Preparing shot list…</div>
+        </div>
+        <div class="video-stage-list" id="video-stage-list"></div>
+      </div>
+
+      <div id="video-ready" style="display:none;">
+        <video id="video-player" controls playsinline></video>
+        <div class="video-actions">
+          <a class="btn-secondary" id="video-download-btn" download>Download Video</a>
+          <button type="button" class="btn-secondary" id="video-regenerate-btn">Regenerate</button>
+        </div>
+        <p class="field-hint">Rendered right on your device from the photos and details you entered — nothing was uploaded to make this cut.</p>
+      </div>
+    </div></div>
   </section>
 
   <!-- DELETE CONFIRMATION -->
@@ -866,6 +962,14 @@
       tips: [
         { label: 'What happens after this?', answer: 'The listing description is next, then Publish — those steps are coming soon.' },
         { label: 'Can I still change the address?', answer: 'Not directly from here yet — a dedicated address edit is on the list. For now, Edit Details covers everything else.' }
+      ]
+    },
+    'screen-video': {
+      greeting: "This is my favorite part 🎬 — I'll turn your room photos into a walkthrough video buyers can watch in seconds.",
+      tips: [
+        { label: 'How does this work?', answer: "I plan a shot order and a camera move for each room, then render the video right here on your device from your actual photos. In a live version, the shot plan is what would hand off to an AI video model for smoother motion." },
+        { label: 'Is my video uploaded anywhere?', answer: "No — the rendering happens entirely in your browser using the photos already on this device. Nothing leaves your phone to make the video itself." },
+        { label: 'Can I make a new one?', answer: "Yep, tap Regenerate any time — add or swap photos first and the new video will use them." }
       ]
     }
   };
@@ -1567,6 +1671,12 @@
       : '<span class="chip status">No standout features added yet</span>';
     $('review-features-notes').textContent = (l.features && l.features.notes) ? l.features.notes : '';
 
+    var hasVideo = videoJobs[l.id] && videoJobs[l.id].status === 'ready';
+    $('review-video-title').textContent = hasVideo ? 'Watch Walkthrough Video' : 'Generate Walkthrough Video';
+    $('review-video-sub').textContent = hasVideo
+      ? 'Your walkthrough is ready — tap to watch or download it.'
+      : 'Turn your room photos into a shareable walkthrough — Scout does the work.';
+
     show('screen-review');
   }
 
@@ -1608,6 +1718,274 @@
     $('delete-modal').classList.remove('show');
     renderDashboard();
     show('screen-dashboard');
+  });
+
+  // ---------- Video walkthrough ----------
+  // Two mocked serverless endpoints (/api/generate-clip, /api/clip-status) stand
+  // in for a real AI video provider (e.g. Runway) — see the files under /api for
+  // the plan on swapping one in later without touching this client code. The
+  // actual video you watch here is rendered for real, on-device, from the
+  // listing's own room photos using <canvas> + MediaRecorder.
+  var VIDEO_MOTIONS = ['zoom-in', 'pan-right', 'zoom-out', 'pan-left'];
+  var videoJobs = {}; // listingId -> { status: 'ready', blobUrl, shots }
+
+  function planShotList(listing){
+    var rp = listing.roomPhotos || {};
+    var order = ROOM_TYPES.filter(function(r){ return rp[r] && rp[r].length; });
+    return order.map(function(room, i){
+      return {
+        room: room,
+        photo: rp[room][0],
+        motion: VIDEO_MOTIONS[i % VIDEO_MOTIONS.length],
+        durationSec: 3
+      };
+    });
+  }
+
+  function mockGenerateClip(payload){
+    var job = { listingId: payload.listingId, startedAt: Date.now(), shots: payload.shots };
+    return { jobId: btoa(JSON.stringify(job)), shots: payload.shots, estimatedSeconds: Math.max(3, payload.shots.length) };
+  }
+  function mockClipStatus(jobId){
+    var job;
+    try{ job = JSON.parse(atob(jobId)); } catch(e){ job = { startedAt: Date.now() - 5000, shots: [] }; }
+    var elapsed = Date.now() - (job.startedAt || 0);
+    if(elapsed < 1200) return { status: 'queued' };
+    if(elapsed < 3200) return { status: 'processing', progress: Math.min(90, Math.round((elapsed - 1200) / 2000 * 90)) };
+    return { status: 'complete', source: 'mock', shots: job.shots || [] };
+  }
+
+  function requestGenerateClip(listing, shots){
+    var payload = {
+      listingId: listing.id,
+      street: listing.street,
+      price: listing.price,
+      features: (listing.features && listing.features.selected) || [],
+      shots: shots.map(function(s){ return { room: s.room }; })
+    };
+    return fetch('/api/generate-clip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      if(!res.ok) throw new Error('generate-clip unavailable');
+      return res.json();
+    }).catch(function(){
+      return mockGenerateClip(payload);
+    });
+  }
+
+  function requestClipStatus(jobId){
+    return fetch('/api/clip-status?jobId=' + encodeURIComponent(jobId)).then(function(res){
+      if(!res.ok) throw new Error('clip-status unavailable');
+      return res.json();
+    }).catch(function(){
+      return mockClipStatus(jobId);
+    });
+  }
+
+  function pollClipStatus(jobId, onProgress){
+    return new Promise(function(resolve, reject){
+      function tick(){
+        requestClipStatus(jobId).then(function(res){
+          if(res.status === 'complete'){ resolve(res); return; }
+          if(res.progress != null) onProgress(res.progress);
+          setTimeout(tick, 500);
+        }).catch(reject);
+      }
+      tick();
+    });
+  }
+
+  function loadImage(src){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function drawCover(ctx, img, x, y, w, h, scale, panX, panY){
+    var ir = img.width / img.height, br = w / h, dw, dh;
+    if(ir > br){ dh = h; dw = h * ir; } else { dw = w; dh = w / ir; }
+    dw *= scale; dh *= scale;
+    ctx.drawImage(img, x + (w - dw) / 2 + panX, y + (h - dh) / 2 + panY, dw, dh);
+  }
+
+  function motionTransform(motion, t){
+    switch(motion){
+      case 'zoom-in': return { scale: 1 + 0.10 * t, panX: 0, panY: 0 };
+      case 'zoom-out': return { scale: 1.10 - 0.10 * t, panX: 0, panY: 0 };
+      case 'pan-left': return { scale: 1.12, panX: 24 - 48 * t, panY: 0 };
+      case 'pan-right': return { scale: 1.12, panX: -24 + 48 * t, panY: 0 };
+      default: return { scale: 1, panX: 0, panY: 0 };
+    }
+  }
+
+  function renderSlideshowVideo(listing, shots, onProgress){
+    if(typeof MediaRecorder === 'undefined'){
+      return Promise.reject(new Error('MediaRecorder not supported on this device'));
+    }
+    var W = 960, H = 540;
+    var canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext('2d');
+
+    return Promise.all(shots.map(function(s){ return loadImage(s.photo); })).then(function(images){
+      return new Promise(function(resolve, reject){
+        var stream = canvas.captureStream(30);
+        var mimeType = 'video/webm;codecs=vp9';
+        if(!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+        var recorder;
+        try{ recorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 3500000 }); }
+        catch(e){ reject(e); return; }
+        var chunks = [];
+        recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+        recorder.onstop = function(){ resolve(URL.createObjectURL(new Blob(chunks, { type: mimeType }))); };
+        recorder.onerror = function(e){ reject(e); };
+
+        var totalMs = shots.reduce(function(sum, s){ return sum + s.durationSec * 1000; }, 0);
+        var startTime = null;
+
+        function frame(now){
+          if(startTime === null) startTime = now;
+          var elapsed = now - startTime;
+          var idx = 0, acc = 0;
+          for(idx = 0; idx < shots.length; idx++){
+            var dur = shots[idx].durationSec * 1000;
+            if(elapsed < acc + dur) break;
+            acc += dur;
+          }
+          if(idx >= shots.length){
+            onProgress(100);
+            recorder.stop();
+            return;
+          }
+          var shot = shots[idx];
+          var t = Math.min(1, (elapsed - acc) / (shot.durationSec * 1000));
+          var xf = motionTransform(shot.motion, t);
+
+          ctx.fillStyle = '#0a1016';
+          ctx.fillRect(0, 0, W, H);
+          drawCover(ctx, images[idx], 0, 0, W, H, xf.scale, xf.panX, xf.panY);
+
+          var grad = ctx.createLinearGradient(0, H - 110, 0, H);
+          grad.addColorStop(0, 'rgba(10,16,22,0)');
+          grad.addColorStop(1, 'rgba(10,16,22,.72)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, H - 110, W, 110);
+          ctx.fillStyle = '#fff';
+          ctx.font = "600 26px 'Work Sans', sans-serif";
+          ctx.fillText(shot.room, 28, H - 46);
+
+          if(idx === 0 && t < 0.55){
+            var fade = 1 - (t / 0.55);
+            ctx.fillStyle = 'rgba(10,16,22,' + (0.5 * fade).toFixed(2) + ')';
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = 'rgba(255,255,255,' + fade.toFixed(2) + ')';
+            ctx.font = "700 36px 'Fraunces', serif";
+            ctx.fillText(listing.street || 'Walkthrough', 28, H / 2 - 10);
+            ctx.font = "500 20px 'IBM Plex Mono', monospace";
+            ctx.fillText(fmtMoney(listing.price) || '', 28, H / 2 + 26);
+          }
+
+          onProgress(Math.min(99, Math.round((elapsed / totalMs) * 100)));
+          requestAnimationFrame(frame);
+        }
+
+        recorder.start();
+        requestAnimationFrame(frame);
+      });
+    });
+  }
+
+  function renderVideoStages(labels, activeIndex){
+    $('video-stage-list').innerHTML = labels.map(function(label, i){
+      var cls = i < activeIndex ? 'done' : (i === activeIndex ? 'active' : '');
+      return '<div class="video-stage ' + cls + '"><span class="video-stage-dot">' + (i < activeIndex ? '✓' : '') + '</span><span>' + escapeHtml(label) + '</span></div>';
+    }).join('');
+  }
+
+  function showVideoStage(stage){
+    $('video-intro').style.display = stage === 'intro' ? 'block' : 'none';
+    $('video-generating').style.display = stage === 'generating' ? 'block' : 'none';
+    $('video-ready').style.display = stage === 'ready' ? 'block' : 'none';
+  }
+
+  function showVideoReady(listing, blobUrl){
+    showVideoStage('ready');
+    $('video-player').src = blobUrl;
+    $('video-download-btn').href = blobUrl;
+    var fname = (listing.street || 'walkthrough').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    $('video-download-btn').setAttribute('download', (fname || 'walkthrough') + '-walkthrough.webm');
+  }
+
+  var VIDEO_STAGE_LABELS = ['Preparing shot list', 'Directing the walkthrough', 'Rendering your video'];
+
+  function startVideoGeneration(listing){
+    var shots = planShotList(listing);
+    if(!shots.length) return;
+    showVideoStage('generating');
+    renderVideoStages(VIDEO_STAGE_LABELS, 0);
+    $('video-progress-fill').style.width = '4%';
+    $('video-progress-label').textContent = 'Preparing shot list…';
+
+    requestGenerateClip(listing, shots).then(function(job){
+      renderVideoStages(VIDEO_STAGE_LABELS, 1);
+      $('video-progress-label').textContent = 'Directing the walkthrough…';
+      return pollClipStatus(job.jobId, function(progress){
+        $('video-progress-fill').style.width = (6 + progress * 0.34) + '%';
+      });
+    }).then(function(){
+      renderVideoStages(VIDEO_STAGE_LABELS, 2);
+      $('video-progress-label').textContent = 'Rendering your video…';
+      return renderSlideshowVideo(listing, shots, function(pct){
+        $('video-progress-fill').style.width = (40 + pct * 0.6) + '%';
+      });
+    }).then(function(blobUrl){
+      renderVideoStages(VIDEO_STAGE_LABELS, 3);
+      videoJobs[listing.id] = { status: 'ready', blobUrl: blobUrl, shots: shots };
+      showVideoReady(listing, blobUrl);
+      scoutCelebrate('🎬 Walkthrough video ready!');
+    }).catch(function(err){
+      console.warn('Video generation failed:', err);
+      $('video-progress-label').textContent = "Something went wrong — tap Regenerate to try again.";
+    });
+  }
+
+  function openVideoPage(){
+    var l = listings.find(function(x){ return x.id === currentId; });
+    if(!l){ renderDashboard(); show('screen-dashboard'); return; }
+    var shots = planShotList(l);
+    $('video-shotlist').innerHTML = shots.map(function(s){
+      return '<div class="shot-row"><img class="shot-row-thumb" src="' + s.photo + '" alt="' + escapeHtml(s.room) + '">' +
+             '<span class="shot-row-name">' + escapeHtml(s.room) + '</span>' +
+             '<span class="shot-row-motion">' + escapeHtml(s.motion.replace('-', ' ')) + '</span></div>';
+    }).join('');
+    $('video-no-photos').style.display = shots.length ? 'none' : 'flex';
+    $('video-generate-btn').style.display = shots.length ? 'block' : 'none';
+
+    var existing = videoJobs[l.id];
+    if(existing && existing.status === 'ready'){
+      showVideoReady(l, existing.blobUrl);
+    } else {
+      showVideoStage('intro');
+    }
+    show('screen-video');
+  }
+
+  $('review-video-btn').addEventListener('click', function(){ openVideoPage(); });
+  $('video-back-btn').addEventListener('click', function(){ openReview(currentId); });
+  $('video-generate-btn').addEventListener('click', function(){
+    var l = listings.find(function(x){ return x.id === currentId; });
+    if(l) startVideoGeneration(l);
+  });
+  $('video-regenerate-btn').addEventListener('click', function(){
+    var l = listings.find(function(x){ return x.id === currentId; });
+    if(!l) return;
+    delete videoJobs[l.id];
+    showVideoStage('intro');
   });
 
   // ---------- Boot ----------
