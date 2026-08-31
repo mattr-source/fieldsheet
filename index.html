@@ -355,107 +355,117 @@
     </div>
   </section>
 
-  <!-- FORM -->
-  <section id="screen-form" class="screen">
+  <!-- ADDRESS -->
+  <section id="screen-address" class="screen">
     <div class="appbar">
-      <button class="back-link" id="form-back-btn">‹ Dashboard</button>
+      <button class="back-link" id="address-back-btn">‹ Dashboard</button>
     </div>
     <div class="scroll">
       <div class="pad">
-        <div class="steps">
-          <div class="step active"><div class="step-dot">1</div><div class="step-label">Basics</div></div>
-          <div class="step locked"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="step-label">Features</div></div>
-          <div class="step locked"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="step-label">Photos</div></div>
-          <div class="step locked"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="step-label">Words</div></div>
-          <div class="step locked"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div class="step-label">Publish</div></div>
-        </div>
+        <div class="steps" id="steps-address"></div>
 
-        <h2 class="form-title" id="form-title">Property Basics</h2>
-        <p class="form-sub">Start with the address, then the facts every listing needs.</p>
+        <h2 class="form-title">Address</h2>
+        <p class="form-sub">Every listing starts here — get the address right first.</p>
 
-        <form id="listing-form" novalidate>
-          <fieldset>
-            <legend class="fieldset-legend">Address</legend>
-            <p class="field-hint">Full address is required before you can save this draft.</p>
-            <div class="field suggest-wrap" id="field-street">
-              <label for="street">Street address<span class="req">*</span></label>
-              <input id="street" placeholder="Start typing an address…" autocomplete="off">
-              <div id="street-suggestions"></div>
-              <div class="field-error">Street address is required.</div>
+        <form novalidate>
+          <p class="field-hint">Full address is required before you can continue.</p>
+          <div class="field suggest-wrap" id="field-street">
+            <label for="street">Street address<span class="req">*</span></label>
+            <input id="street" placeholder="Start typing an address…" autocomplete="off">
+            <div id="street-suggestions"></div>
+            <div class="field-error">Street address is required.</div>
+          </div>
+          <div class="field">
+            <label for="unit">Unit / Apt (optional)</label>
+            <input id="unit" placeholder="Unit 4B">
+          </div>
+          <div class="row">
+            <div class="field" id="field-city">
+              <label for="city">City<span class="req">*</span></label>
+              <input id="city" placeholder="Asheville">
+              <div class="field-error">City is required.</div>
+            </div>
+            <div class="field" id="field-state" style="max-width:110px;">
+              <label for="state">State<span class="req">*</span></label>
+              <select id="state"></select>
+              <div class="field-error">Required.</div>
+            </div>
+          </div>
+          <div class="field" id="field-zip" style="max-width:160px;">
+            <label for="zip">ZIP code<span class="req">*</span></label>
+            <input id="zip" inputmode="numeric" maxlength="5" placeholder="28801">
+            <div class="field-error">Enter a 5-digit ZIP.</div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-secondary" id="address-cancel-btn">Cancel</button>
+      <button class="btn-primary" id="address-next-btn" disabled>Next</button>
+    </div>
+  </section>
+
+  <!-- DETAILS -->
+  <section id="screen-details" class="screen">
+    <div class="appbar">
+      <button class="back-link" id="details-back-btn">‹ Back</button>
+    </div>
+    <div class="scroll">
+      <div class="pad">
+        <div class="steps" id="steps-details"></div>
+
+        <h2 class="form-title">Property Details</h2>
+        <p class="form-sub">The facts every listing needs.</p>
+
+        <div class="records-panel" id="records-panel"></div>
+
+        <form novalidate>
+          <div class="field" id="field-type">
+            <label for="propertyType">Property type<span class="req">*</span></label>
+            <select id="propertyType">
+              <option value="">Select type…</option>
+              <option>Single-Family Home</option>
+              <option>Condominium</option>
+              <option>Townhouse</option>
+              <option>Multi-Family</option>
+              <option>Land / Lot</option>
+              <option>Other</option>
+            </select>
+            <div class="field-error">Choose a property type.</div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="beds">Bedrooms</label>
+              <input id="beds" type="number" min="0" step="1" inputmode="numeric" placeholder="3">
             </div>
             <div class="field">
-              <label for="unit">Unit / Apt (optional)</label>
-              <input id="unit" placeholder="Unit 4B">
+              <label for="baths">Bathrooms</label>
+              <input id="baths" type="number" min="0" step="0.5" inputmode="decimal" placeholder="2.5">
             </div>
-            <div class="row">
-              <div class="field" id="field-city">
-                <label for="city">City<span class="req">*</span></label>
-                <input id="city" placeholder="Asheville">
-                <div class="field-error">City is required.</div>
-              </div>
-              <div class="field" id="field-state" style="max-width:110px;">
-                <label for="state">State<span class="req">*</span></label>
-                <select id="state"></select>
-                <div class="field-error">Required.</div>
-              </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="sqft">Finished sq ft</label>
+              <input id="sqft" type="number" min="0" step="1" inputmode="numeric" placeholder="1,850">
             </div>
-            <div class="field" id="field-zip" style="max-width:160px;">
-              <label for="zip">ZIP code<span class="req">*</span></label>
-              <input id="zip" inputmode="numeric" maxlength="5" placeholder="28801">
-              <div class="field-error">Enter a 5-digit ZIP.</div>
+            <div class="field">
+              <label for="yearBuilt">Year built</label>
+              <input id="yearBuilt" type="number" min="1800" inputmode="numeric" placeholder="1998">
             </div>
-          </fieldset>
-
-          <fieldset>
-            <legend class="fieldset-legend">Property Details</legend>
-            <div class="records-panel" id="records-panel"></div>
-            <div class="field" id="field-type">
-              <label for="propertyType">Property type<span class="req">*</span></label>
-              <select id="propertyType">
-                <option value="">Select type…</option>
-                <option>Single-Family Home</option>
-                <option>Condominium</option>
-                <option>Townhouse</option>
-                <option>Multi-Family</option>
-                <option>Land / Lot</option>
-                <option>Other</option>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:2;">
+              <label for="lotSize">Lot size</label>
+              <input id="lotSize" type="number" min="0" step="any" inputmode="decimal" placeholder="0.32">
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="lotUnit">Unit</label>
+              <select id="lotUnit">
+                <option>Acres</option>
+                <option>Sq Ft</option>
               </select>
-              <div class="field-error">Choose a property type.</div>
             </div>
-            <div class="row">
-              <div class="field">
-                <label for="beds">Bedrooms</label>
-                <input id="beds" type="number" min="0" step="1" inputmode="numeric" placeholder="3">
-              </div>
-              <div class="field">
-                <label for="baths">Bathrooms</label>
-                <input id="baths" type="number" min="0" step="0.5" inputmode="decimal" placeholder="2.5">
-              </div>
-            </div>
-            <div class="row">
-              <div class="field">
-                <label for="sqft">Finished sq ft</label>
-                <input id="sqft" type="number" min="0" step="1" inputmode="numeric" placeholder="1,850">
-              </div>
-              <div class="field">
-                <label for="yearBuilt">Year built</label>
-                <input id="yearBuilt" type="number" min="1800" inputmode="numeric" placeholder="1998">
-              </div>
-            </div>
-            <div class="row">
-              <div class="field" style="flex:2;">
-                <label for="lotSize">Lot size</label>
-                <input id="lotSize" type="number" min="0" step="any" inputmode="decimal" placeholder="0.32">
-              </div>
-              <div class="field" style="flex:1;">
-                <label for="lotUnit">Unit</label>
-                <select id="lotUnit">
-                  <option>Acres</option>
-                  <option>Sq Ft</option>
-                </select>
-              </div>
-            </div>
-          </fieldset>
+          </div>
 
           <fieldset>
             <legend class="fieldset-legend">Price</legend>
@@ -469,27 +479,23 @@
       </div>
     </div>
     <div class="action-bar">
-      <button class="btn-secondary" id="form-cancel-btn">Cancel</button>
-      <button class="btn-primary" id="form-save-btn" disabled>Save Draft</button>
+      <button class="btn-secondary" id="details-back-action-btn">Back</button>
+      <button class="btn-primary" id="details-next-btn" disabled>Next</button>
     </div>
   </section>
 
-  <!-- REVIEW -->
-  <section id="screen-review" class="screen">
+  <!-- PHOTOS -->
+  <section id="screen-photos" class="screen">
     <div class="appbar">
-      <button class="back-link" id="review-back-btn">‹ Dashboard</button>
+      <button class="back-link" id="photos-back-btn">‹ Back</button>
     </div>
     <div class="scroll">
       <div class="pad">
-        <div class="chip-row" id="review-chips" style="margin-bottom:8px;"></div>
-        <h2 class="review-address" id="review-address"></h2>
-        <div class="review-cityline" id="review-cityline"></div>
-        <div class="review-price" id="review-price"></div>
+        <div class="steps" id="steps-photos"></div>
 
-        <div class="section-label" style="margin-top:22px;">The facts</div>
-        <div class="facts-grid" id="facts-grid"></div>
+        <h2 class="form-title">Photos</h2>
+        <p class="form-sub">Work room by room — start with the street view.</p>
 
-        <div class="section-label">Photos</div>
         <div class="field" style="margin-bottom:6px;">
           <label for="room-select">Room</label>
           <select id="room-select"></select>
@@ -516,9 +522,38 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
           <div>Features and the listing description are next — the basics and photos already work.</div>
         </div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-secondary" id="photos-back-action-btn">Back</button>
+      <button class="btn-primary" id="photos-finish-btn">Finish</button>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="screen-review" class="screen">
+    <div class="appbar">
+      <button class="back-link" id="review-back-btn">‹ Dashboard</button>
+    </div>
+    <div class="scroll">
+      <div class="pad">
+        <div class="chip-row" id="review-chips" style="margin-bottom:8px;"></div>
+        <h2 class="review-address" id="review-address"></h2>
+        <div class="review-cityline" id="review-cityline"></div>
+        <div class="review-price" id="review-price"></div>
+
+        <div class="section-label" style="margin-top:22px;">The facts</div>
+        <div class="facts-grid" id="facts-grid"></div>
+        <div class="section-label" id="review-photo-summary"></div>
+
+        <div class="soon-panel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <div>Features and the listing description are next — the basics and photos already work.</div>
+        </div>
 
         <div class="review-actions">
-          <button class="btn-secondary" id="review-edit-btn">Edit</button>
+          <button class="btn-secondary" id="review-edit-btn">Edit Details</button>
+          <button class="btn-secondary" id="review-photos-btn">Photos</button>
         </div>
         <div class="delete-row">
           <button class="btn-danger" id="review-delete-btn">Delete Listing</button>
@@ -645,64 +680,171 @@
     });
   }
 
+  // ---------- Multi-page wizard: Address -> Details -> Photos ----------
+  var STEP_LABELS = ['Address', 'Details', 'Photos', 'Features', 'Words', 'Publish'];
+  var wizardCancelTarget = 'dashboard'; // 'dashboard' or 'review' — where Cancel/Back-out lands
+
+  function renderSteps(containerId, activeIndex){
+    var el = $(containerId);
+    if(!el) return;
+    el.innerHTML = STEP_LABELS.map(function(label, i){
+      var locked = i > 2;
+      var cls = 'step' + (i === activeIndex ? ' active' : '') + (locked ? ' locked' : '');
+      var dot = locked
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+        : String(i + 1);
+      return '<div class="' + cls + '"><div class="step-dot">' + dot + '</div><div class="step-label">' + label + '</div></div>';
+    }).join('');
+  }
+
+  function exitWizard(){
+    if(wizardCancelTarget === 'review' && currentId){
+      openReview(currentId);
+    } else {
+      renderDashboard();
+      show('screen-dashboard');
+    }
+  }
+
+  function getOrInitListing(){
+    var existing = currentId ? listings.find(function(l){ return l.id === currentId; }) : null;
+    return existing || null;
+  }
+
+  function addressValid(){
+    return !!$('street').value.trim() && !!$('city').value.trim() && !!$('state').value && /^\d{5}$/.test($('zip').value.trim());
+  }
+  function updateAddressNextState(){ $('address-next-btn').disabled = !addressValid(); }
+
+  function detailsValid(){ return !!$('propertyType').value; }
+  function updateDetailsNextState(){ $('details-next-btn').disabled = !detailsValid(); }
+
+  function fillAddressFields(l){
+    $('street').value = l ? (l.street || '') : '';
+    $('unit').value = l ? (l.unit || '') : '';
+    $('city').value = l ? (l.city || '') : '';
+    $('state').value = l ? (l.state || '') : '';
+    $('zip').value = l ? (l.zip || '') : '';
+    ['field-street', 'field-city', 'field-state', 'field-zip'].forEach(function(k){ $(k).classList.remove('has-error'); });
+    hideSuggestions();
+    updateAddressNextState();
+  }
+  function fillDetailFields(l){
+    $('propertyType').value = l ? (l.propertyType || '') : '';
+    $('beds').value = l && l.beds != null ? l.beds : '';
+    $('baths').value = l && l.baths != null ? l.baths : '';
+    $('sqft').value = l && l.sqft != null ? l.sqft : '';
+    $('yearBuilt').value = l && l.yearBuilt != null ? l.yearBuilt : '';
+    $('lotSize').value = l && l.lotSize != null ? l.lotSize : '';
+    $('lotUnit').value = l ? (l.lotUnit || 'Acres') : 'Acres';
+    $('price').value = l && l.price != null ? Number(l.price).toLocaleString('en-US') : '';
+    $('field-type').classList.remove('has-error');
+    document.querySelectorAll('.field.auto-filled').forEach(function(f){ f.classList.remove('auto-filled'); });
+    updateDetailsNextState();
+  }
+
+  function openAddressPage(){
+    var l = getOrInitListing();
+    fillAddressFields(l);
+    renderSteps('steps-address', 0);
+    show('screen-address');
+  }
+
+  function openDetailsPage(){
+    var l = getOrInitListing();
+    fillDetailFields(l);
+    renderSteps('steps-details', 1);
+    var untouched = l && !l.propertyType && l.beds == null && l.baths == null && l.sqft == null && l.yearBuilt == null && l.lotSize == null;
+    if(l && untouched){
+      runLookup(l.street, l.city, l.state, l.zip);
+    } else {
+      hideRecordsPanel();
+    }
+    show('screen-details');
+  }
+
   $('new-listing-btn').addEventListener('click', function(){
     currentId = null;
-    resetForm();
-    $('form-title').textContent = 'Property Basics';
-    show('screen-form');
+    wizardCancelTarget = 'dashboard';
+    openAddressPage();
   });
-  $('form-back-btn').addEventListener('click', function(){ renderDashboard(); show('screen-dashboard'); });
-  $('form-cancel-btn').addEventListener('click', function(){ renderDashboard(); show('screen-dashboard'); });
+  $('address-back-btn').addEventListener('click', exitWizard);
+  $('address-cancel-btn').addEventListener('click', exitWizard);
 
-  // ---------- Form ----------
-  var FIELD_IDS = ['street','unit','city','state','zip','propertyType','beds','baths','sqft','yearBuilt','lotSize','lotUnit','price'];
+  $('address-next-btn').addEventListener('click', function(){
+    var street = $('street').value.trim();
+    var city = $('city').value.trim();
+    var state = $('state').value;
+    var zip = $('zip').value.trim();
+    var ok = true;
+    if(!street){ $('field-street').classList.add('has-error'); ok = false; } else { $('field-street').classList.remove('has-error'); }
+    if(!city){ $('field-city').classList.add('has-error'); ok = false; } else { $('field-city').classList.remove('has-error'); }
+    if(!state){ $('field-state').classList.add('has-error'); ok = false; } else { $('field-state').classList.remove('has-error'); }
+    if(!/^\d{5}$/.test(zip)){ $('field-zip').classList.add('has-error'); ok = false; } else { $('field-zip').classList.remove('has-error'); }
+    if(!ok){
+      var firstError = document.querySelector('.field.has-error');
+      if(firstError) firstError.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    var now = Date.now();
+    var listing = getOrInitListing();
+    if(!listing){
+      listing = { id: uid(), createdAt: now, propertyType: '', beds: null, baths: null, sqft: null, yearBuilt: null, lotSize: null, lotUnit: 'Acres', price: null, roomPhotos: {} };
+      listings.push(listing);
+      currentId = listing.id;
+    }
+    listing.street = street;
+    listing.unit = $('unit').value.trim();
+    listing.city = city;
+    listing.state = state;
+    listing.zip = zip;
+    listing.updatedAt = now;
+    persistListings();
+    openDetailsPage();
+  });
 
-  function computeRequiredValid(){
-    return !!$('street').value.trim() &&
-           !!$('city').value.trim() &&
-           !!$('state').value &&
-           /^\d{5}$/.test($('zip').value.trim()) &&
-           !!$('propertyType').value;
-  }
-  function updateSaveButtonState(){
-    $('form-save-btn').disabled = !computeRequiredValid();
-  }
+  $('details-back-btn').addEventListener('click', openAddressPage);
+  $('details-back-action-btn').addEventListener('click', openAddressPage);
 
-  function resetForm(){
-    FIELD_IDS.forEach(function(id){ var el = $(id); if(el) el.value = ''; });
-    $('lotUnit').value = 'Acres';
-    ['street','city','state','zip','type'].forEach(function(k){ $('field-'+k).classList.remove('has-error'); });
-    hideSuggestions();
-    hideRecordsPanel();
-    document.querySelectorAll('.field.auto-filled').forEach(function(f){ f.classList.remove('auto-filled'); });
-    updateSaveButtonState();
-  }
-  function fillForm(l){
-    $('street').value = l.street || '';
-    $('unit').value = l.unit || '';
-    $('city').value = l.city || '';
-    $('state').value = l.state || '';
-    $('zip').value = l.zip || '';
-    $('propertyType').value = l.propertyType || '';
-    $('beds').value = l.beds != null ? l.beds : '';
-    $('baths').value = l.baths != null ? l.baths : '';
-    $('sqft').value = l.sqft != null ? l.sqft : '';
-    $('yearBuilt').value = l.yearBuilt != null ? l.yearBuilt : '';
-    $('lotSize').value = l.lotSize != null ? l.lotSize : '';
-    $('lotUnit').value = l.lotUnit || 'Acres';
-    $('price').value = l.price != null ? Number(l.price).toLocaleString('en-US') : '';
-    hideSuggestions();
-    hideRecordsPanel();
-    document.querySelectorAll('.field.auto-filled').forEach(function(f){ f.classList.remove('auto-filled'); });
-    updateSaveButtonState();
-  }
+  $('details-next-btn').addEventListener('click', function(){
+    var propertyType = $('propertyType').value;
+    if(!propertyType){
+      $('field-type').classList.add('has-error');
+      document.getElementById('field-type').scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    $('field-type').classList.remove('has-error');
+    var listing = getOrInitListing();
+    if(!listing){ openAddressPage(); return; }
+    listing.propertyType = propertyType;
+    listing.beds = $('beds').value === '' ? null : Number($('beds').value);
+    listing.baths = $('baths').value === '' ? null : Number($('baths').value);
+    listing.sqft = $('sqft').value === '' ? null : Number($('sqft').value);
+    listing.yearBuilt = $('yearBuilt').value === '' ? null : Number($('yearBuilt').value);
+    listing.lotSize = $('lotSize').value === '' ? null : Number($('lotSize').value);
+    listing.lotUnit = $('lotUnit').value;
+    listing.price = $('price').value === '' ? null : Number($('price').value.replace(/,/g, ''));
+    listing.updatedAt = Date.now();
+    persistListings();
+    openPhotosPage();
+  });
 
-  ['street','city','state','propertyType','zip'].forEach(function(id){
+  ['street', 'city', 'state', 'zip'].forEach(function(id){
     var el = $(id);
     if(!el) return;
     var handler = function(){
-      $('field-' + (id === 'propertyType' ? 'type' : id)).classList.remove('has-error');
-      updateSaveButtonState();
+      $('field-' + id).classList.remove('has-error');
+      updateAddressNextState();
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+  });
+  ['propertyType'].forEach(function(id){
+    var el = $(id);
+    if(!el) return;
+    var handler = function(){
+      $('field-type').classList.remove('has-error');
+      updateDetailsNextState();
     };
     el.addEventListener('input', handler);
     el.addEventListener('change', handler);
@@ -780,7 +922,7 @@
           }
         });
         if(record.lotUnit && filledAny) $('lotUnit').value = record.lotUnit;
-        updateSaveButtonState();
+        updateDetailsNextState();
       }
       if(filledAny){
         showRecordsPanel('found',
@@ -813,8 +955,7 @@
         $('zip').value = a.zip;
         ['field-street','field-city','field-state','field-zip'].forEach(function(fid){ $(fid).classList.remove('has-error'); });
         hideSuggestions();
-        updateSaveButtonState();
-        runLookup(a.street, a.city, a.state, a.zip);
+        updateAddressNextState();
       });
     });
   }
@@ -831,64 +972,6 @@
     renderSuggestions(matches);
   });
   $('street').addEventListener('blur', function(){ setTimeout(hideSuggestions, 150); });
-
-  // Manually-typed address (no suggestion tapped): trigger the same lookup once
-  // street, city, state, and a valid ZIP are all present.
-  $('zip').addEventListener('blur', function(){
-    var street = $('street').value.trim();
-    var city = $('city').value.trim();
-    var state = $('state').value;
-    var zip = $('zip').value.trim();
-    if(street && city && state && /^\d{5}$/.test(zip)){
-      runLookup(street, city, state, zip);
-    }
-  });
-
-  $('form-save-btn').addEventListener('click', function(){
-    var street = $('street').value.trim();
-    var city = $('city').value.trim();
-    var state = $('state').value;
-    var zip = $('zip').value.trim();
-    var propertyType = $('propertyType').value;
-
-    var ok = true;
-    if(!street){ $('field-street').classList.add('has-error'); ok = false; } else { $('field-street').classList.remove('has-error'); }
-    if(!city){ $('field-city').classList.add('has-error'); ok = false; } else { $('field-city').classList.remove('has-error'); }
-    if(!state){ $('field-state').classList.add('has-error'); ok = false; } else { $('field-state').classList.remove('has-error'); }
-    if(!/^\d{5}$/.test(zip)){ $('field-zip').classList.add('has-error'); ok = false; } else { $('field-zip').classList.remove('has-error'); }
-    if(!propertyType){ $('field-type').classList.add('has-error'); ok = false; } else { $('field-type').classList.remove('has-error'); }
-    if(!ok){
-      var firstError = document.querySelector('.field.has-error');
-      if(firstError) firstError.scrollIntoView({behavior:'smooth', block:'center'});
-      return;
-    }
-
-    var now = Date.now();
-    var existing = currentId ? listings.find(function(l){ return l.id === currentId; }) : null;
-    var listing = {
-      id: existing ? existing.id : uid(),
-      createdAt: existing ? existing.createdAt : now,
-      updatedAt: now,
-      street: street, unit: $('unit').value.trim(),
-      city: city, state: state, zip: zip,
-      propertyType: propertyType,
-      beds: $('beds').value === '' ? null : Number($('beds').value),
-      baths: $('baths').value === '' ? null : Number($('baths').value),
-      sqft: $('sqft').value === '' ? null : Number($('sqft').value),
-      yearBuilt: $('yearBuilt').value === '' ? null : Number($('yearBuilt').value),
-      lotSize: $('lotSize').value === '' ? null : Number($('lotSize').value),
-      lotUnit: $('lotUnit').value,
-      price: $('price').value === '' ? null : Number($('price').value.replace(/,/g, '')),
-      roomPhotos: existing ? (existing.roomPhotos || {}) : {}
-    };
-    if(existing){
-      listings = listings.map(function(l){ return l.id === listing.id ? listing : l; });
-    } else {
-      listings.push(listing);
-    }
-    persistListings();
-    openReview(listing.id);
-  });
 
   // ---------- Photos ----------
   var ROOM_TYPES = ['Street View (Exterior)', 'Living Room', 'Kitchen', 'Dining Room', 'Primary Bedroom', 'Bedroom', 'Primary Bathroom', 'Bathroom', 'Garage', 'Basement', 'Left Side of House', 'Right Side of House', 'Back of House', 'Backyard (from House)', 'Other'];
@@ -1028,6 +1111,18 @@
   $('photo-camera-input').addEventListener('change', function(){ handlePhotoFiles(this.files); this.value = ''; });
   $('photo-upload-input').addEventListener('change', function(){ handlePhotoFiles(this.files); this.value = ''; });
 
+  function openPhotosPage(){
+    currentRoom = ROOM_TYPES[0];
+    roomSelect.value = currentRoom;
+    renderRoomSection();
+    renderSteps('steps-photos', 2);
+    show('screen-photos');
+  }
+
+  $('photos-back-btn').addEventListener('click', openDetailsPage);
+  $('photos-back-action-btn').addEventListener('click', openDetailsPage);
+  $('photos-finish-btn').addEventListener('click', function(){ openReview(currentId); });
+
   // ---------- Review ----------
   function openReview(id){
     currentId = id;
@@ -1040,9 +1135,12 @@
     $('review-chips').innerHTML =
       (l.propertyType ? '<span class="chip">' + escapeHtml(l.propertyType) + '</span>' : '') +
       '<span class="chip status">Draft</span>';
-    currentRoom = ROOM_TYPES[0];
-    roomSelect.value = currentRoom;
-    renderRoomSection();
+
+    var photoCount = totalPhotoCount(l);
+    var roomCount = Object.keys(l.roomPhotos || {}).filter(function(r){ return l.roomPhotos[r] && l.roomPhotos[r].length; }).length;
+    $('review-photo-summary').textContent = photoCount
+      ? photoCount + ' photo' + (photoCount > 1 ? 's' : '') + ' across ' + roomCount + ' room' + (roomCount > 1 ? 's' : '')
+      : 'No photos yet';
 
     var facts = [
       ['Bedrooms', fmtNum(l.beds)],
@@ -1061,11 +1159,12 @@
 
   $('review-back-btn').addEventListener('click', function(){ renderDashboard(); show('screen-dashboard'); });
   $('review-edit-btn').addEventListener('click', function(){
-    var l = listings.find(function(x){ return x.id === currentId; });
-    if(!l) return;
-    fillForm(l);
-    $('form-title').textContent = 'Edit Property Basics';
-    show('screen-form');
+    wizardCancelTarget = 'review';
+    openAddressPage();
+  });
+  $('review-photos-btn').addEventListener('click', function(){
+    wizardCancelTarget = 'review';
+    openPhotosPage();
   });
 
   $('review-delete-btn').addEventListener('click', function(){
