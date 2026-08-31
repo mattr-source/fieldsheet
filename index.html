@@ -289,6 +289,17 @@
   .review-actions .btn-secondary{flex:1;}
   .delete-row{text-align:center;margin-top:4px;}
   .btn-danger-text.confirming{background:var(--danger-wash);border-radius:8px;}
+
+  .modal-overlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(16,23,29,.5);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-card{background:var(--paper-raised);border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(10,16,22,.3);}
+  .modal-card h3{font-size:19px;margin-bottom:8px;}
+  .modal-card p{color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:20px;}
+  .modal-actions{display:flex;gap:10px;}
+  .modal-actions button{flex:1;}
+  .btn-danger{padding:13px 18px;border-radius:10px;border:none;cursor:pointer;background:var(--danger);color:#fff;font-weight:600;font-size:15px;}
+  .btn-danger:hover{filter:brightness(0.92);}
+  .btn-danger:active{transform:scale(.99);}
 </style>
 </head>
 <body>
@@ -517,6 +528,18 @@
     </div>
   </section>
 
+  <!-- DELETE CONFIRMATION -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal-card">
+      <h3>Delete this draft?</h3>
+      <p id="delete-modal-text">This will permanently remove this listing draft. This can't be undone.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="delete-cancel-btn">Cancel</button>
+        <button type="button" class="btn-danger" id="delete-confirm-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -527,7 +550,7 @@
 
   var LS_SESSION = 'fieldsheet.session';
   var LS_LISTINGS = 'fieldsheet.listings';
-  var session = null, listings = [], currentId = null, deleteArmed = false, deleteTimer = null;
+  var session = null, listings = [], currentId = null;
 
   function $(id){ return document.getElementById(id); }
   function show(id){
@@ -1034,11 +1057,6 @@
       return '<div class="fact"><div class="fact-label">' + f[0] + '</div><div class="fact-value">' + escapeHtml(String(f[1])) + '</div></div>';
     }).join('');
 
-    deleteArmed = false;
-    var delBtn = $('review-delete-btn');
-    delBtn.textContent = 'Delete draft';
-    delBtn.classList.remove('confirming');
-
     show('screen-review');
   }
 
@@ -1052,21 +1070,27 @@
   });
 
   $('review-delete-btn').addEventListener('click', function(){
-    var btn = $('review-delete-btn');
-    if(!deleteArmed){
-      deleteArmed = true;
-      btn.textContent = 'Tap again to delete';
-      btn.classList.add('confirming');
-      clearTimeout(deleteTimer);
-      deleteTimer = setTimeout(function(){
-        deleteArmed = false;
-        btn.textContent = 'Delete draft';
-        btn.classList.remove('confirming');
-      }, 3000);
-      return;
+    var l = listings.find(function(x){ return x.id === currentId; });
+    var label = l && l.street ? l.street : 'this listing';
+    $('delete-modal-text').textContent = 'This will permanently remove ' + label + (l && totalPhotoCount(l) ? ' and its photos' : '') + '. This can\'t be undone.';
+    $('delete-modal').classList.add('show');
+  });
+
+  $('delete-cancel-btn').addEventListener('click', function(){
+    $('delete-modal').classList.remove('show');
+  });
+  $('delete-modal').addEventListener('click', function(e){
+    if(e.target === this) this.classList.remove('show');
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && $('delete-modal').classList.contains('show')){
+      $('delete-modal').classList.remove('show');
     }
+  });
+  $('delete-confirm-btn').addEventListener('click', function(){
     listings = listings.filter(function(l){ return l.id !== currentId; });
     persistListings();
+    $('delete-modal').classList.remove('show');
     renderDashboard();
     show('screen-dashboard');
   });
