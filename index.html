@@ -896,10 +896,148 @@
   function loadState(){
     session = safeParse(localStorage.getItem(LS_SESSION), null);
     listings = safeParse(localStorage.getItem(LS_LISTINGS), []);
+    // Older local listings (from before cloud sync existed) may have a
+    // non-UUID id -- give them a real one now so they're able to sync.
+    listings.forEach(function(l){
+      if(!isValidUUID(l.id)) l.id = uid();
+    });
   }
   function persistSession(){ localStorage.setItem(LS_SESSION, JSON.stringify(session)); }
   function persistListings(){ localStorage.setItem(LS_LISTINGS, JSON.stringify(listings)); }
-  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function uid(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    // Fallback for older browsers -- still a real UUID shape so it works as
+    // the Postgres primary key once synced.
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+      var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  function isValidUUID(v){
+    return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+  }
+
+  // ---------- Cloud sync (Supabase) ----------
+  // Local `listings` (in localStorage) stays the source of truth for instant,
+  // offline-safe reads/writes in the UI. Every save also pushes to the real
+  // `listings` table in the background so the same data is reachable from a
+  // future CRM/public site -- if that push fails (e.g. no signal in the
+  // field), the local copy is untouched and we just try again on the next
+  // save. cloudSyncQueue serializes these so two quick saves can't land out
+  // of order and overwrite each other.
+  var cloudSyncQueue = Promise.resolve();
+
+  function listingToRow(listing){
+    return {
+      id: listing.id,
+      company_id: session.companyId,
+      agent_id: session.userId,
+      title: listing.street || 'Untitled property',
+      price: listing.price,
+      address: listing.street || '',
+      unit: listing.unit || null,
+      city: listing.city || null,
+      state: listing.state || null,
+      zip: listing.zip || null,
+      bedrooms: listing.beds,
+      bathrooms: listing.baths,
+      sqft: listing.sqft,
+      lot_size: listing.lotSize,
+      lot_unit: listing.lotUnit || null,
+      year_built: listing.yearBuilt,
+      property_type: listing.propertyType || null,
+      features: (listing.features && listing.features.selected) || [],
+      feature_notes: (listing.features && listing.features.notes) || null,
+      room_photos: listing.roomPhotos || {},
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  function rowToListing(row){
+    return {
+      id: row.id,
+      createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
+      street: row.address || '',
+      unit: row.unit || '',
+      city: row.city || '',
+      state: row.state || '',
+      zip: row.zip || '',
+      propertyType: row.property_type || '',
+      beds: row.bedrooms,
+      baths: row.bathrooms,
+      sqft: row.sqft,
+      yearBuilt: row.year_built,
+      lotSize: row.lot_size,
+      lotUnit: row.lot_unit || 'Acres',
+      price: row.price,
+      roomPhotos: row.room_photos || {},
+      features: { selected: row.features || [], notes: row.feature_notes || '' }
+    };
+  }
+
+  function syncListingToCloud(listing){
+    if(!listing || !session || !session.companyId || !isValidUUID(listing.id)) return;
+    var row = listingToRow(listing);
+    cloudSyncQueue = cloudSyncQueue.then(function(){
+      return sb.from('listings').upsert(row).then(function(res){
+        if(res.error) console.warn('Cloud sync failed for listing', listing.id, res.error.message);
+      });
+    });
+  }
+
+  function deleteListingFromCloud(listingId){
+    if(!session || !session.companyId || !isValidUUID(listingId)) return;
+    sb.from('listings').delete().eq('id', listingId).then(function(res){
+      if(res.error) console.warn('Cloud delete failed:', res.error.message);
+    });
+  }
+
+  // Pulls this company's listings down from Supabase (RLS already scopes the
+  // result to session's own company) and merges them into the local copy.
+  // Any listing that only exists locally (not yet synced -- e.g. created
+  // while offline) is kept rather than wiped out, and re-queued to sync now.
+  function fetchListingsFromCloud(){
+    if(!session || !session.companyId) return Promise.resolve();
+    return sb.from('listings').select('*').then(function(res){
+      if(res.error){ console.warn('Could not load listings from cloud:', res.error.message); return; }
+      var serverListings = (res.data || []).map(rowToListing);
+      var serverIds = {};
+      serverListings.forEach(function(l){ serverIds[l.id] = true; });
+      var localOnly = listings.filter(function(l){ return !serverIds[l.id]; });
+      listings = serverListings.concat(localOnly);
+      persistListings();
+      localOnly.forEach(function(l){ syncListingToCloud(l); });
+    });
+  }
+
+  function dataUrlToBlob(dataUrl){
+    var parts = dataUrl.split(',');
+    var mimeMatch = parts[0].match(/:(.*?);/);
+    var mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    var binary = atob(parts[1]);
+    var arr = new Uint8Array(binary.length);
+    for(var i = 0; i < binary.length; i++){ arr[i] = binary.charCodeAt(i); }
+    return new Blob([arr], { type: mime });
+  }
+
+  // Uploads one photo to Supabase Storage and resolves to its public URL, or
+  // resolves back to the original data URL (unchanged) if that's not
+  // possible right now -- the caller just keeps showing the local copy.
+  function uploadRoomPhoto(listing, room, dataUrl){
+    if(!session || !session.companyId) return Promise.resolve(dataUrl);
+    var blob;
+    try { blob = dataUrlToBlob(dataUrl); } catch(e){ return Promise.resolve(dataUrl); }
+    var path = session.companyId + '/' + listing.id + '/' + room + '/' + uid() + '.jpg';
+    return sb.storage.from('listing-photos').upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+      .then(function(res){
+        if(res.error){ console.warn('Photo upload failed:', res.error.message); return dataUrl; }
+        var pub = sb.storage.from('listing-photos').getPublicUrl(path);
+        return (pub && pub.data && pub.data.publicUrl) ? pub.data.publicUrl : dataUrl;
+      })
+      .catch(function(err){ console.warn('Photo upload failed:', err); return dataUrl; });
+  }
 
   function fmtMoney(n){
     if(n === '' || n === null || n === undefined || isNaN(n)) return '—';
@@ -1131,8 +1269,10 @@
         }
         applySignedInSession(res.data.user, profileRes.data);
         $('password').value = '';
-        renderDashboard();
-        show('screen-dashboard');
+        return fetchListingsFromCloud().then(function(){
+          renderDashboard();
+          show('screen-dashboard');
+        });
       });
     }).catch(function(err){
       $('login-error').textContent = (err && err.message) ? err.message : 'Something went wrong signing in.';
@@ -1305,6 +1445,7 @@
     listing.zip = zip;
     listing.updatedAt = now;
     persistListings();
+    syncListingToCloud(listing);
     scoutCelebrate('🎉 Address locked in!');
     openDetailsPage();
   });
@@ -1332,6 +1473,7 @@
     listing.price = $('price').value === '' ? null : Number($('price').value.replace(/,/g, ''));
     listing.updatedAt = Date.now();
     persistListings();
+    syncListingToCloud(listing);
     scoutCelebrate('🎉 Details saved — on to photos!');
     openPhotosPage();
   });
@@ -1588,6 +1730,7 @@
         listing.roomPhotos[currentRoom].splice(i, 1);
         listing.updatedAt = Date.now();
         persistListings();
+        syncListingToCloud(listing);
         renderRoomSection();
       });
     });
@@ -1605,11 +1748,31 @@
     if(!toProcess.length) return;
     var wasEmpty = totalPhotoCount(listing) === 0;
     Promise.all(toProcess.map(function(f){ return compressImage(f, 1600, 0.75); })).then(function(dataUrls){
-      listing.roomPhotos[currentRoom] = existing.concat(dataUrls);
+      var startIndex = existing.length;
+      var room = currentRoom;
+      listing.roomPhotos[room] = existing.concat(dataUrls);
       listing.updatedAt = Date.now();
       persistListings();
       renderRoomSection();
       if(wasEmpty) scoutCelebrate('📸 First photo added!');
+
+      // Show the photo instantly from the local copy above, then upload it
+      // to real cloud storage in the background and swap the reference over
+      // once it lands -- no waiting on a slow connection to see the photo.
+      syncListingToCloud(listing);
+      dataUrls.forEach(function(dataUrl, i){
+        uploadRoomPhoto(listing, room, dataUrl).then(function(hostedUrl){
+          if(hostedUrl === dataUrl) return; // upload skipped or failed -- stay on local copy
+          var arr = listing.roomPhotos[room];
+          var pos = startIndex + i;
+          if(arr && arr[pos] === dataUrl){
+            arr[pos] = hostedUrl;
+            persistListings();
+            if(currentRoom === room) renderRoomSection();
+            syncListingToCloud(listing);
+          }
+        });
+      });
     }).catch(function(err){
       console.warn('Photo processing failed:', err);
     });
@@ -1683,6 +1846,7 @@
     listing.features = { selected: currentFeatureSelection.slice(), notes: $('featureNotes').value.trim() };
     listing.updatedAt = Date.now();
     persistListings();
+    syncListingToCloud(listing);
     scoutCelebrate('🎉 Features saved — draft ready to review!');
     openReview(currentId);
   });
@@ -1766,8 +1930,10 @@
     }
   });
   $('delete-confirm-btn').addEventListener('click', function(){
+    var deletedId = currentId;
     listings = listings.filter(function(l){ return l.id !== currentId; });
     persistListings();
+    deleteListingFromCloud(deletedId);
     $('delete-modal').classList.remove('show');
     renderDashboard();
     show('screen-dashboard');
@@ -1853,6 +2019,7 @@
   function loadImage(src){
     return new Promise(function(resolve, reject){
       var img = new Image();
+      img.crossOrigin = 'anonymous'; // harmless for data: URLs; required once photos load from Supabase Storage
       img.onload = function(){ resolve(img); };
       img.onerror = reject;
       img.src = src;
@@ -2047,7 +2214,8 @@
   // app_users profile fresh rather than trusting our own cached copy -- a
   // role or company change made elsewhere should take effect on next load.
   function boot(){
-    loadState(); // still loads `listings` from localStorage for now (photos etc. -- migrates in a later step)
+    loadState(); // seeds `listings` from localStorage immediately so the UI has something to show right away;
+                 // fetchListingsFromCloud() below reconciles it with the real backend once we know who's signed in.
     sb.auth.getSession().then(function(res){
       var authSession = res && res.data ? res.data.session : null;
       if(!authSession){
@@ -2064,8 +2232,10 @@
           });
         }
         applySignedInSession(authSession.user, profileRes.data);
-        renderDashboard();
-        show('screen-dashboard');
+        return fetchListingsFromCloud().then(function(){
+          renderDashboard();
+          show('screen-dashboard');
+        });
       });
     }).catch(function(){
       session = null;
