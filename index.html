@@ -857,7 +857,11 @@
     var bubbleEl = scoutEl('scout-bubble');
     var c = SCOUT_CONTENT[id];
     if(!fab) return;
-    if(!c){ fab.style.display = 'none'; return; }
+    if(!c || id === 'screen-login'){
+      // Scout's full photo is already the hero image on the login screen — no popup widget there at all.
+      fab.style.display = 'none';
+      return;
+    }
     fab.style.display = 'flex';
     var hasActionBar = !!document.querySelector('#' + id + ' .action-bar');
     fab.classList.toggle('raised', hasActionBar);
@@ -865,8 +869,7 @@
     if(!scoutSeenScreens[id]){
       scoutSeenScreens[id] = true;
       var bubble = scoutEl('scout-bubble');
-      var iconHtml = (id === 'screen-login') ? '' : '<span class="scout-bubble-icon">' + scoutImgTag(SCOUT_HEAD_URL) + '</span>';
-      bubble.innerHTML = iconHtml + '<span class="scout-bubble-text">' + escapeHtml(c.greeting) + '</span>';
+      bubble.innerHTML = '<span class="scout-bubble-icon">' + scoutImgTag(SCOUT_HEAD_URL) + '</span><span class="scout-bubble-text">' + escapeHtml(c.greeting) + '</span>';
       scoutBubbleTimer = setTimeout(function(){ bubble.classList.add('show'); }, 350);
       scoutBubbleTimer = setTimeout(function(){ hideScoutBubble(); }, 5500);
       scoutEl('scout-badge').classList.add('show');
