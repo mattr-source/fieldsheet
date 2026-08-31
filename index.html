@@ -148,7 +148,6 @@
     background:transparent;border:1px solid var(--line-strong);color:var(--ink);font-weight:500;font-size:15px;
   }
   .btn-secondary:hover{border-color:var(--ink);}
-  .btn-danger-text{background:none;border:none;cursor:pointer;color:var(--danger);font-weight:500;font-size:14px;padding:10px;}
 
   .login-note{
     margin-top:22px;padding:12px 14px;border-radius:10px;background:var(--accent-wash);
@@ -287,8 +286,8 @@
 
   .review-actions{display:flex;gap:10px;margin-bottom:8px;}
   .review-actions .btn-secondary{flex:1;}
-  .delete-row{text-align:center;margin-top:4px;}
-  .btn-danger-text.confirming{background:var(--danger-wash);border-radius:8px;}
+  .delete-row{margin-top:10px;}
+  .delete-row .btn-danger{width:100%;}
 
   .modal-overlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(16,23,29,.5);align-items:center;justify-content:center;padding:20px;}
   .modal-overlay.show{display:flex;}
@@ -297,7 +296,7 @@
   .modal-card p{color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:20px;}
   .modal-actions{display:flex;gap:10px;}
   .modal-actions button{flex:1;}
-  .btn-danger{padding:13px 18px;border-radius:10px;border:none;cursor:pointer;background:var(--danger);color:#fff;font-weight:600;font-size:15px;}
+  .btn-danger{padding:13px 18px;border-radius:10px;border:1px solid transparent;cursor:pointer;background:var(--danger);color:#fff;font-weight:600;font-size:15px;}
   .btn-danger:hover{filter:brightness(0.92);}
   .btn-danger:active{transform:scale(.99);}
 </style>
@@ -522,7 +521,7 @@
           <button class="btn-secondary" id="review-edit-btn">Edit</button>
         </div>
         <div class="delete-row">
-          <button class="btn-danger-text" id="review-delete-btn">Delete draft</button>
+          <button class="btn-danger" id="review-delete-btn">Delete Listing</button>
         </div>
       </div>
     </div>
