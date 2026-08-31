@@ -237,6 +237,18 @@
   .suggest-street{font-weight:600;font-size:14px;}
   .suggest-cityline{font-family:'IBM Plex Mono';font-size:12px;color:var(--muted);margin-top:1px;}
 
+  .records-panel{display:none;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;margin-bottom:16px;font-size:13px;line-height:1.5;}
+  .records-panel.show{display:flex;}
+  .records-panel.loading{background:var(--accent-wash);color:var(--accent-strong);}
+  .records-panel.found{background:var(--accent-wash);color:var(--ink);}
+  .records-panel.found svg{color:var(--accent-strong);flex:0 0 auto;margin-top:1px;}
+  .records-panel.notfound{background:transparent;border:1.5px dashed var(--line-strong);color:var(--muted);}
+  .records-spinner{width:14px;height:14px;margin-top:2px;border-radius:50%;border:2px solid var(--accent-wash);border-top-color:var(--accent-strong);flex:0 0 auto;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion:reduce){.records-spinner{animation:none;}}
+
+  .field.auto-filled input,.field.auto-filled select{border-color:var(--accent);background:var(--accent-wash);}
+
   .action-bar{
     position:sticky;bottom:0;display:flex;gap:10px;padding:16px 20px calc(16px + env(safe-area-inset-bottom));
     background:var(--paper-raised);border-top:1px solid var(--line);
@@ -372,6 +384,7 @@
 
           <fieldset>
             <legend class="fieldset-legend">Property Details</legend>
+            <div class="records-panel" id="records-panel"></div>
             <div class="field" id="field-type">
               <label for="propertyType">Property type<span class="req">*</span></label>
               <select id="propertyType">
@@ -600,6 +613,8 @@
     $('lotUnit').value = 'Acres';
     ['street','city','state','zip','type'].forEach(function(k){ $('field-'+k).classList.remove('has-error'); });
     hideSuggestions();
+    hideRecordsPanel();
+    document.querySelectorAll('.field.auto-filled').forEach(function(f){ f.classList.remove('auto-filled'); });
     updateSaveButtonState();
   }
   function fillForm(l){
@@ -617,6 +632,8 @@
     $('lotUnit').value = l.lotUnit || 'Acres';
     $('price').value = l.price != null ? l.price : '';
     hideSuggestions();
+    hideRecordsPanel();
+    document.querySelectorAll('.field.auto-filled').forEach(function(f){ f.classList.remove('auto-filled'); });
     updateSaveButtonState();
   }
 
@@ -635,18 +652,84 @@
   // Real autocomplete needs a live provider (Google Places, Mapbox, Smarty, etc.) —
   // see the note that ships alongside this build. This local list exists to test the
   // type-ahead interaction pattern before that's wired up.
+  // A handful of addresses carry demo "public record" facts to test the auto-fill
+  // path; the rest deliberately have none, to test the not-found path too.
   var DEMO_ADDRESSES = [
-    {street:'118 Larkspur Way', city:'Asheville', state:'NC', zip:'28801'},
+    {street:'118 Larkspur Way', city:'Asheville', state:'NC', zip:'28801', propertyType:'Single-Family Home', beds:3, baths:2, sqft:1850, yearBuilt:1998, lotSize:0.32, lotUnit:'Acres'},
     {street:'240 Larkspur Way', city:'Asheville', state:'NC', zip:'28801'},
-    {street:'512 Maple Ridge Rd', city:'Asheville', state:'NC', zip:'28804'},
+    {street:'512 Maple Ridge Rd', city:'Asheville', state:'NC', zip:'28804', propertyType:'Single-Family Home', beds:4, baths:3, sqft:2600, yearBuilt:2005, lotSize:0.5, lotUnit:'Acres'},
     {street:'77 Sunset Terrace', city:'Black Mountain', state:'NC', zip:'28711'},
-    {street:'903 Riverbend Dr', city:'Asheville', state:'NC', zip:'28806'},
-    {street:'1450 Hendersonville Rd', city:'Asheville', state:'NC', zip:'28803'},
+    {street:'903 Riverbend Dr', city:'Asheville', state:'NC', zip:'28806', propertyType:'Townhouse', beds:2, baths:2.5, sqft:1420, yearBuilt:2016, lotSize:2100, lotUnit:'Sq Ft'},
+    {street:'1450 Hendersonville Rd', city:'Asheville', state:'NC', zip:'28803', propertyType:'Condominium', beds:2, baths:2, sqft:1100, yearBuilt:2010},
     {street:'22 Birchwood Ln', city:'Weaverville', state:'NC', zip:'28787'},
-    {street:'68 Cedar Hollow Ct', city:'Fletcher', state:'NC', zip:'28732'},
+    {street:'68 Cedar Hollow Ct', city:'Fletcher', state:'NC', zip:'28732', propertyType:'Single-Family Home', beds:3, baths:2, sqft:1975, yearBuilt:1989, lotSize:0.41, lotUnit:'Acres'},
     {street:'340 Elk Mountain Rd', city:'Asheville', state:'NC', zip:'28804'},
-    {street:'15 Depot St', city:'Asheville', state:'NC', zip:'28801'}
+    {street:'15 Depot St', city:'Asheville', state:'NC', zip:'28801', propertyType:'Multi-Family', beds:4, baths:3, sqft:2200, yearBuilt:1975, lotSize:0.18, lotUnit:'Acres'}
   ];
+
+  var lookupTimer = null;
+
+  function findRecord(street, city, state, zip){
+    var s = street.trim().toLowerCase();
+    return DEMO_ADDRESSES.find(function(a){
+      return a.street.toLowerCase() === s && a.city.toLowerCase() === city.trim().toLowerCase() && a.state === state && a.zip === zip;
+    });
+  }
+
+  function showRecordsPanel(kind, html){
+    var panel = $('records-panel');
+    panel.className = 'records-panel show ' + kind;
+    panel.innerHTML = html;
+  }
+  function hideRecordsPanel(){
+    var panel = $('records-panel');
+    panel.className = 'records-panel';
+    panel.innerHTML = '';
+  }
+
+  function markAutoFilled(fieldId){
+    var input = $(fieldId);
+    if(!input) return;
+    var wrap = input.closest('.field');
+    if(!wrap) return;
+    wrap.classList.add('auto-filled');
+    var clear = function(){
+      wrap.classList.remove('auto-filled');
+      input.removeEventListener('input', clear);
+      input.removeEventListener('change', clear);
+    };
+    input.addEventListener('input', clear);
+    input.addEventListener('change', clear);
+  }
+
+  function runLookup(street, city, state, zip){
+    showRecordsPanel('loading', '<div class="records-spinner"></div><div>Looking up public property records for this address…</div>');
+    clearTimeout(lookupTimer);
+    lookupTimer = setTimeout(function(){
+      var record = findRecord(street, city, state, zip);
+      var filledAny = false;
+      if(record){
+        [['propertyType','propertyType'],['beds','beds'],['baths','baths'],['sqft','sqft'],['yearBuilt','yearBuilt'],['lotSize','lotSize']].forEach(function(pair){
+          var fieldId = pair[0], key = pair[1];
+          var el = $(fieldId);
+          if(el && !el.value && record[key] !== undefined && record[key] !== null){
+            el.value = record[key];
+            markAutoFilled(fieldId);
+            filledAny = true;
+          }
+        });
+        if(record.lotUnit && filledAny) $('lotUnit').value = record.lotUnit;
+        updateSaveButtonState();
+      }
+      if(filledAny){
+        showRecordsPanel('found',
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>' +
+          '<div><b>Found public record data</b> for this address — review the auto-filled details below and adjust anything that’s changed.</div>');
+      } else {
+        showRecordsPanel('notfound', '<div>No public records found for this address — go ahead and fill in the details below.</div>');
+      }
+    }, 650);
+  }
 
   function hideSuggestions(){ var box = $('street-suggestions'); if(box) box.innerHTML = ''; }
 
@@ -670,7 +753,7 @@
         ['field-street','field-city','field-state','field-zip'].forEach(function(fid){ $(fid).classList.remove('has-error'); });
         hideSuggestions();
         updateSaveButtonState();
-        $('propertyType').focus();
+        runLookup(a.street, a.city, a.state, a.zip);
       });
     });
   }
@@ -682,6 +765,18 @@
     renderSuggestions(matches);
   });
   $('street').addEventListener('blur', function(){ setTimeout(hideSuggestions, 150); });
+
+  // Manually-typed address (no suggestion tapped): trigger the same lookup once
+  // street, city, state, and a valid ZIP are all present.
+  $('zip').addEventListener('blur', function(){
+    var street = $('street').value.trim();
+    var city = $('city').value.trim();
+    var state = $('state').value;
+    var zip = $('zip').value.trim();
+    if(street && city && state && /^\d{5}$/.test(zip)){
+      runLookup(street, city, state, zip);
+    }
+  });
 
   $('form-save-btn').addEventListener('click', function(){
     var street = $('street').value.trim();
