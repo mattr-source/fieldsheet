@@ -278,6 +278,12 @@
   .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
   .photo-remove{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(16,23,29,.65);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;padding:0;}
   .photo-empty{color:var(--muted);font-size:12.5px;margin:-2px 0 16px;}
+  .photo-count{font-family:'IBM Plex Mono';font-size:11.5px;color:var(--muted);margin:8px 0 14px;}
+  .room-hint{font-size:13px;color:var(--muted);line-height:1.5;margin:-8px 0 14px;}
+  .rooms-summary{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 22px;}
+  .room-chip{font-family:'IBM Plex Mono';font-size:11px;padding:5px 10px;border-radius:100px;border:1px solid var(--line-strong);background:var(--paper-raised);color:var(--muted);cursor:pointer;}
+  .room-chip.active{background:var(--accent-wash);border-color:var(--accent);color:var(--accent-strong);font-weight:600;}
+  .btn-secondary:disabled{opacity:.45;cursor:not-allowed;}
 
   .review-actions{display:flex;gap:10px;margin-bottom:8px;}
   .review-actions .btn-secondary{flex:1;}
@@ -474,6 +480,11 @@
         <div class="facts-grid" id="facts-grid"></div>
 
         <div class="section-label">Photos</div>
+        <div class="field" style="margin-bottom:6px;">
+          <label for="room-select">Room</label>
+          <select id="room-select"></select>
+        </div>
+        <p class="room-hint" id="room-hint"></p>
         <div class="photo-actions">
           <button type="button" class="btn-secondary" id="take-photo-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>
@@ -486,8 +497,10 @@
         </div>
         <input type="file" id="photo-camera-input" accept="image/*" capture="environment" style="display:none">
         <input type="file" id="photo-upload-input" accept="image/*" multiple style="display:none">
+        <div class="photo-count" id="photo-count"></div>
         <div class="photo-grid" id="photo-grid"></div>
-        <div class="photo-empty" id="photo-empty">No photos yet — snap one while you're still walking the property.</div>
+        <div class="photo-empty" id="photo-empty"></div>
+        <div class="rooms-summary" id="rooms-summary"></div>
 
         <div class="soon-panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
@@ -595,7 +608,7 @@
         '</div>' +
         '<div class="chip-row">' +
           (l.propertyType ? '<span class="chip">' + escapeHtml(l.propertyType) + '</span>' : '') +
-          (l.photos && l.photos.length ? '<span class="chip status">' + l.photos.length + ' photo' + (l.photos.length > 1 ? 's' : '') + '</span>' : '') +
+          (totalPhotoCount(l) ? '<span class="chip status">' + totalPhotoCount(l) + ' photo' + (totalPhotoCount(l) > 1 ? 's' : '') + '</span>' : '') +
           '<span class="chip status">Draft</span>' +
         '</div>' +
         '<div class="card-time">Updated ' + fmtUpdated(l.updatedAt) + '</div>';
@@ -844,7 +857,7 @@
       lotSize: $('lotSize').value === '' ? null : Number($('lotSize').value),
       lotUnit: $('lotUnit').value,
       price: $('price').value === '' ? null : Number($('price').value.replace(/,/g, '')),
-      photos: existing ? (existing.photos || []) : []
+      roomPhotos: existing ? (existing.roomPhotos || {}) : {}
     };
     if(existing){
       listings = listings.map(function(l){ return l.id === listing.id ? listing : l; });
@@ -856,6 +869,76 @@
   });
 
   // ---------- Photos ----------
+  var ROOM_TYPES = ['Street View (Exterior)', 'Living Room', 'Kitchen', 'Dining Room', 'Primary Bedroom', 'Bedroom', 'Primary Bathroom', 'Bathroom', 'Garage', 'Basement', 'Left Side of House', 'Right Side of House', 'Back of House', 'Backyard (from House)', 'Other'];
+  var ROOM_PROMPTS = {
+    'Street View (Exterior)': 'Start here — a street view is the first shot most buyers see.',
+    'Living Room': 'Photograph the living room.',
+    'Kitchen': 'Photograph the kitchen.',
+    'Dining Room': 'Photograph the dining room.',
+    'Primary Bedroom': 'Photograph the primary bedroom.',
+    'Bedroom': 'Photograph a bedroom.',
+    'Primary Bathroom': 'Photograph the primary bathroom.',
+    'Bathroom': 'Photograph a bathroom.',
+    'Garage': 'Photograph the garage.',
+    'Basement': 'Photograph the basement.',
+    'Left Side of House': 'Capture the left side of the house, if accessible.',
+    'Right Side of House': 'Capture the right side of the house, if accessible.',
+    'Back of House': 'Capture the back exterior of the house.',
+    'Backyard (from House)': 'Stand near the house and photograph the backyard looking outward.',
+    'Other': 'Photograph any other area worth showing.'
+  };
+  var MAX_PHOTOS_PER_ROOM = 5;
+  var currentRoom = ROOM_TYPES[0];
+
+  var roomSelect = document.getElementById('room-select');
+  roomSelect.innerHTML = ROOM_TYPES.map(function(r){ return '<option>' + r + '</option>'; }).join('');
+  roomSelect.addEventListener('change', function(){
+    currentRoom = this.value;
+    renderRoomSection();
+  });
+
+  function getRoomPhotos(listing, room){
+    return (listing.roomPhotos && listing.roomPhotos[room]) || [];
+  }
+  function totalPhotoCount(l){
+    var rp = l.roomPhotos || {};
+    return Object.keys(rp).reduce(function(sum, k){ return sum + (rp[k] ? rp[k].length : 0); }, 0);
+  }
+
+  function renderRoomSection(){
+    var listing = listings.find(function(x){ return x.id === currentId; });
+    if(!listing) return;
+    var photos = getRoomPhotos(listing, currentRoom);
+
+    $('room-hint').textContent = ROOM_PROMPTS[currentRoom] || ('Photograph the ' + currentRoom.toLowerCase() + '.');
+    $('photo-count').textContent = photos.length + ' of ' + MAX_PHOTOS_PER_ROOM + ' photos';
+    $('photo-empty').textContent = 'No photos yet for ' + currentRoom.toLowerCase() + '.';
+    $('photo-empty').style.display = photos.length ? 'none' : 'block';
+    renderPhotoGrid(photos);
+
+    var atLimit = photos.length >= MAX_PHOTOS_PER_ROOM;
+    $('take-photo-btn').disabled = atLimit;
+    $('upload-photo-btn').disabled = atLimit;
+
+    var rp = listing.roomPhotos || {};
+    var roomsWithPhotos = ROOM_TYPES.filter(function(r){ return rp[r] && rp[r].length; });
+    var summary = $('rooms-summary');
+    if(!roomsWithPhotos.length){
+      summary.innerHTML = '';
+    } else {
+      summary.innerHTML = roomsWithPhotos.map(function(r){
+        return '<button type="button" class="room-chip' + (r === currentRoom ? ' active' : '') + '" data-room="' + escapeHtml(r) + '">' + escapeHtml(r) + ' · ' + rp[r].length + '</button>';
+      }).join('');
+      Array.prototype.forEach.call(summary.querySelectorAll('.room-chip'), function(btn){
+        btn.addEventListener('click', function(){
+          currentRoom = btn.getAttribute('data-room');
+          roomSelect.value = currentRoom;
+          renderRoomSection();
+        });
+      });
+    }
+  }
+
   function compressImage(file, maxDim, quality){
     return new Promise(function(resolve, reject){
       var reader = new FileReader();
@@ -881,20 +964,19 @@
   function renderPhotoGrid(photos){
     photos = photos || [];
     var grid = $('photo-grid');
-    $('photo-empty').style.display = photos.length ? 'none' : 'block';
     grid.innerHTML = photos.map(function(src, i){
-      return '<div class="photo-thumb"><img src="' + src + '" alt="Property photo ' + (i + 1) + '">' +
+      return '<div class="photo-thumb"><img src="' + src + '" alt="' + escapeHtml(currentRoom) + ' photo ' + (i + 1) + '">' +
              '<button type="button" class="photo-remove" data-i="' + i + '" aria-label="Remove photo">&times;</button></div>';
     }).join('');
     Array.prototype.forEach.call(grid.querySelectorAll('.photo-remove'), function(btn){
       btn.addEventListener('click', function(){
         var i = parseInt(btn.getAttribute('data-i'), 10);
         var listing = listings.find(function(x){ return x.id === currentId; });
-        if(!listing || !listing.photos) return;
-        listing.photos.splice(i, 1);
+        if(!listing || !listing.roomPhotos || !listing.roomPhotos[currentRoom]) return;
+        listing.roomPhotos[currentRoom].splice(i, 1);
         listing.updatedAt = Date.now();
         persistListings();
-        renderPhotoGrid(listing.photos);
+        renderRoomSection();
       });
     });
   }
@@ -902,13 +984,18 @@
   function handlePhotoFiles(fileList){
     var files = Array.prototype.slice.call(fileList || []);
     if(!files.length || !currentId) return;
-    Promise.all(files.map(function(f){ return compressImage(f, 1600, 0.75); })).then(function(dataUrls){
-      var listing = listings.find(function(x){ return x.id === currentId; });
-      if(!listing) return;
-      listing.photos = (listing.photos || []).concat(dataUrls);
+    var listing = listings.find(function(x){ return x.id === currentId; });
+    if(!listing) return;
+    listing.roomPhotos = listing.roomPhotos || {};
+    var existing = listing.roomPhotos[currentRoom] || [];
+    var remaining = Math.max(0, MAX_PHOTOS_PER_ROOM - existing.length);
+    var toProcess = files.slice(0, remaining);
+    if(!toProcess.length) return;
+    Promise.all(toProcess.map(function(f){ return compressImage(f, 1600, 0.75); })).then(function(dataUrls){
+      listing.roomPhotos[currentRoom] = existing.concat(dataUrls);
       listing.updatedAt = Date.now();
       persistListings();
-      renderPhotoGrid(listing.photos);
+      renderRoomSection();
     }).catch(function(err){
       console.warn('Photo processing failed:', err);
     });
@@ -931,7 +1018,9 @@
     $('review-chips').innerHTML =
       (l.propertyType ? '<span class="chip">' + escapeHtml(l.propertyType) + '</span>' : '') +
       '<span class="chip status">Draft</span>';
-    renderPhotoGrid(l.photos);
+    currentRoom = ROOM_TYPES[0];
+    roomSelect.value = currentRoom;
+    renderRoomSection();
 
     var facts = [
       ['Bedrooms', fmtNum(l.beds)],
