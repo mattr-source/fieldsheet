@@ -170,6 +170,28 @@
     btn.textContent = busy ? 'Signing in…' : 'Log in';
   }
 
+  // This page is only ever meant for you, the platform operator -- never for
+  // a brokerage customer's own login, even though customers authenticate
+  // through the same Supabase project. is_platform_admin() is the same
+  // database check the RLS insert policies use (see schema.sql), so "can see
+  // this form" and "can actually create a company" are always the same
+  // answer -- there's no way for someone to see a form here that the
+  // database would then silently reject.
+  function checkPlatformAdmin(){
+    return sb.rpc('is_platform_admin').then(function(res){
+      if(res.error) return false;
+      return res.data === true;
+    }).catch(function(){ return false; });
+  }
+  function rejectNonAdmin(){
+    return sb.auth.signOut().then(function(){
+      session = null;
+      show('screen-login');
+      $('login-error').textContent = 'This account doesn\'t have access to Platform Admin.';
+      $('login-error').hidden = false;
+    });
+  }
+
   $('login-form').addEventListener('submit', function(e){
     e.preventDefault();
     var email = $('email').value.trim();
@@ -177,16 +199,22 @@
     if(!email || !pw) return;
     $('login-error').hidden = true;
     setLoginBusy(true);
+    var signedInUser = null, signedInProfile = null;
     sb.auth.signInWithPassword({ email: email, password: pw }).then(function(res){
       if(res.error) throw res.error;
-      return loadAppUserProfile(res.data.user.id).then(function(profileRes){
-        if(profileRes.error || !profileRes.data){
-          throw new Error('Signed in, but no profile is set up for this account yet.');
-        }
-        applySignedInSession(res.data.user, profileRes.data);
-        $('greeting-line').textContent = session.name || session.email;
-        show('screen-app');
-      });
+      signedInUser = res.data.user;
+      return loadAppUserProfile(signedInUser.id);
+    }).then(function(profileRes){
+      if(profileRes.error || !profileRes.data){
+        throw new Error('Signed in, but no profile is set up for this account yet.');
+      }
+      signedInProfile = profileRes.data;
+      return checkPlatformAdmin();
+    }).then(function(isAdmin){
+      if(!isAdmin) return rejectNonAdmin();
+      applySignedInSession(signedInUser, signedInProfile);
+      $('greeting-line').textContent = session.name || session.email;
+      show('screen-app');
     }).catch(function(err){
       $('login-error').textContent = (err && err.message) ? err.message : 'Something went wrong signing in.';
       $('login-error').hidden = false;
@@ -254,18 +282,51 @@
     sbSignup.auth.signUp({ email: adminEmail, password: adminPassword }).then(function(signUpRes){
       if(signUpRes.error) throw new Error('Could not create that login: ' + signUpRes.error.message);
       if(!signUpRes.data || !signUpRes.data.user) throw new Error('Sign-up did not return a new user.');
+
+      // When this project requires email confirmation and adminEmail is
+      // ALREADY registered to some account, Supabase does not return an
+      // error here -- it silently hands back a fake user object (empty
+      // `identities`, no real row in auth.users) so that this form can't be
+      // used to probe which emails already exist. If we don't catch that
+      // here, we'd go on to create the company and then fail on the
+      // app_users insert with a confusing foreign-key error, leaving an
+      // orphaned company behind. Catch it up front instead, with a plain
+      // explanation.
+      var identities = signUpRes.data.user.identities;
+      if(Array.isArray(identities) && identities.length === 0){
+        throw new Error('That email is already registered to a Fieldsheet login (maybe your own admin account?). Use a different email address for this brokerage\'s admin.');
+      }
       newUserId = signUpRes.data.user.id;
       needsConfirmation = !signUpRes.data.session;
 
-      return sb.from('companies').insert({ name: companyName, slug: slug }).select().single();
-    }).then(function(companyRes){
-      if(companyRes.error){
-        if(String(companyRes.error.message || '').indexOf('duplicate') !== -1){
-          throw new Error('That marketplace link ("' + slug + '") is already taken — try a different one.');
-        }
-        throw new Error('Could not create the company: ' + companyRes.error.message);
+      // Look for an existing company with this slug first. Normally this
+      // finds nothing and we insert fresh below -- but if an EARLIER attempt
+      // at this exact brokerage already created the company and then failed
+      // before it could attach an admin login (e.g. the case above), reuse
+      // that leftover row instead of erroring out on a duplicate slug.
+      return sb.from('companies').select('id, name, slug').eq('slug', slug).maybeSingle();
+    }).then(function(existingRes){
+      if(existingRes.error) throw new Error('Could not check for an existing brokerage: ' + existingRes.error.message);
+      if(existingRes.data){
+        var existingCompany = existingRes.data;
+        return sb.from('app_users').select('id').eq('company_id', existingCompany.id).then(function(linkedRes){
+          if(linkedRes.error) throw new Error('Could not check the existing brokerage: ' + linkedRes.error.message);
+          if(linkedRes.data && linkedRes.data.length > 0){
+            throw new Error('That marketplace link ("' + slug + '") is already taken by an active brokerage — try a different one.');
+          }
+          return existingCompany; // orphaned from an earlier failed attempt -- reuse it
+        });
       }
-      var company = companyRes.data;
+      return sb.from('companies').insert({ name: companyName, slug: slug }).select().single().then(function(companyRes){
+        if(companyRes.error){
+          if(String(companyRes.error.message || '').indexOf('duplicate') !== -1){
+            throw new Error('That marketplace link ("' + slug + '") is already taken — try a different one.');
+          }
+          throw new Error('Could not create the company: ' + companyRes.error.message);
+        }
+        return companyRes.data;
+      });
+    }).then(function(company){
       return sb.from('app_users').insert({
         id: newUserId, company_id: company.id, name: adminName, email: adminEmail, role: 'admin'
       }).then(function(appUserRes){
@@ -297,13 +358,18 @@
     sb.auth.getSession().then(function(res){
       var authSession = res && res.data ? res.data.session : null;
       if(!authSession){ show('screen-login'); return; }
-      return loadAppUserProfile(authSession.user.id).then(function(profileRes){
+      var authSessionUser = authSession.user;
+      return loadAppUserProfile(authSessionUser.id).then(function(profileRes){
         if(profileRes.error || !profileRes.data){
           return sb.auth.signOut().then(function(){ show('screen-login'); });
         }
-        applySignedInSession(authSession.user, profileRes.data);
-        $('greeting-line').textContent = session.name || session.email;
-        show('screen-app');
+        var profile = profileRes.data;
+        return checkPlatformAdmin().then(function(isAdmin){
+          if(!isAdmin) return rejectNonAdmin();
+          applySignedInSession(authSessionUser, profile);
+          $('greeting-line').textContent = session.name || session.email;
+          show('screen-app');
+        });
       });
     }).catch(function(){ show('screen-login'); });
   }
