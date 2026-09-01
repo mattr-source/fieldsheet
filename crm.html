@@ -8,6 +8,7 @@
   :root{
     --accent:#0f5c4c; --accent-dark:#0b4638; --ink:#1a2420; --muted:#5b6b64;
     --line:#e3e8e5; --bg:#f7f9f8; --card:#ffffff; --radius:12px; --danger:#a1281a;
+    --sidebar-bg:#132420; --sidebar-text:#adc0b8; --sidebar-line:rgba(255,255,255,.09);
   }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); }
@@ -29,23 +30,44 @@
   .btn-secondary{ background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px 14px; font-size:13.5px; font-weight:600; cursor:pointer; }
   .login-error{ background:#fdeceb; color:var(--danger); border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:14px; }
 
-  /* ---------- App shell ---------- */
-  header.app-header{
-    background:#fff; border-bottom:1px solid var(--line); padding:14px 24px;
-    display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;
-  }
-  .brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; }
-  .brand-mark{ width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; }
-  .header-right{ display:flex; align-items:center; gap:14px; font-size:13.5px; color:var(--muted); }
+  /* ---------- App shell (sidebar + main) ---------- */
+  .app-shell{ display:flex; min-height:100vh; align-items:stretch; }
 
-  .tabs{ display:flex; gap:4px; padding:14px 24px 0; max-width:1200px; margin:0 auto; }
-  .tab-btn{
-    background:none; border:none; padding:10px 16px; font-size:14px; font-weight:600; color:var(--muted);
-    cursor:pointer; border-bottom:2.5px solid transparent;
+  .sidebar{
+    width:240px; flex-shrink:0; background:var(--sidebar-bg); color:var(--sidebar-text);
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh; z-index:10;
   }
-  .tab-btn.active{ color:var(--accent-dark); border-bottom-color:var(--accent); }
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; padding:22px 20px 18px; color:#fff; }
+  .brand-mark{ width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0; }
+  .sidebar-nav{ flex:1; padding:6px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; background:none; border:none; width:100%;
+    color:var(--sidebar-text); text-align:left; padding:10px 12px; border-radius:8px;
+    font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .nav-item svg{ width:17px; height:17px; flex-shrink:0; }
+  .nav-item:hover{ background:rgba(255,255,255,.07); color:#fff; }
+  .nav-item.active{ background:var(--accent); color:#fff; }
+  .sidebar-footer{ padding:14px 16px 20px; border-top:1px solid var(--sidebar-line); }
+  .sidebar-user{ font-size:12.5px; color:#fff; opacity:.9; margin-bottom:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sidebar-footer .btn-secondary{ width:100%; background:rgba(255,255,255,.06); color:#fff; border-color:rgba(255,255,255,.16); }
+  .sidebar-footer .btn-secondary:hover{ background:rgba(255,255,255,.12); }
 
-  .panel-wrap{ max-width:1200px; margin:0 auto; padding:18px 24px 60px; }
+  .main-col{ flex:1; min-width:0; }
+  .topbar{ background:#fff; border-bottom:1px solid var(--line); padding:18px 24px; position:sticky; top:0; z-index:5; }
+  .topbar h1{ margin:0; font-size:19px; }
+
+  @media (max-width:860px){
+    .app-shell{ flex-direction:column; }
+    .sidebar{ width:100%; height:auto; position:relative; flex-direction:row; flex-wrap:wrap; align-items:center; padding:12px 14px; gap:10px; }
+    .sidebar-brand{ padding:0; margin-right:auto; }
+    .sidebar-nav{ flex-direction:row; flex-wrap:wrap; padding:0; overflow:visible; }
+    .sidebar-footer{ border-top:none; padding:0; display:flex; align-items:center; gap:10px; }
+    .sidebar-user{ margin-bottom:0; white-space:normal; }
+    .sidebar-footer .btn-secondary{ width:auto; }
+  }
+
+  .panel-wrap{ max-width:1200px; margin:0 auto; padding:22px 24px 60px; }
   .panel-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .panel-header h2{ font-size:18px; margin:0; }
   .panel-header .count{ color:var(--muted); font-size:13.5px; }
@@ -66,6 +88,14 @@
   .status-select.qualified, .status-select.hired{ color:#1f6a3a; }
   .status-select.interviewing{ color:#a15a1a; }
   .status-select.rejected{ color:var(--muted); }
+  .status-select.scheduled{ color:#1a5aa1; }
+  .status-select.completed{ color:#1f6a3a; }
+  .status-select.cancelled{ color:var(--muted); }
+  .status-select.no_show{ color:var(--danger); }
+  .status-select.offer{ color:#a15a1a; }
+  .status-select.under_contract{ color:#1a5aa1; }
+  .status-select.closed{ color:#1f6a3a; }
+  .status-select.fell_through{ color:var(--danger); }
   .type-badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; text-transform:capitalize; margin-bottom:3px; }
   .type-badge.listing{ background:#eaf3ef; color:var(--accent-dark); }
   .type-badge.buyer{ background:#eef2fb; color:#1a5aa1; }
@@ -80,7 +110,23 @@
     th, td{ padding:9px 10px; font-size:12.5px; }
   }
 
-  /* ---------- Team tab ---------- */
+  /* ---------- Dashboard ---------- */
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px; }
+  @media (max-width:900px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; }
+  .stat-label{ font-size:11.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin-bottom:9px; }
+  .stat-value{ font-size:27px; font-weight:800; color:var(--ink); }
+  .dash-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  @media (max-width:1000px){ .dash-grid{ grid-template-columns:1fr; } }
+  .dash-panel{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; }
+  .dash-panel h3{ margin:0 0 12px; font-size:14.5px; }
+  .dash-panel p.sub{ color:var(--muted); font-size:12px; margin:10px 0 0; }
+  .pipeline-value{ font-size:28px; font-weight:800; color:var(--accent-dark); }
+  .mini-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .mini-list li{ display:flex; flex-direction:column; font-size:13px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+  .mini-list li:last-child{ border-bottom:none; padding-bottom:0; }
+
+  /* ---------- Side-panel layout (Team / Showings / Transactions) ---------- */
   .team-layout{ display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
   @media (max-width:900px){ .team-layout{ grid-template-columns:1fr; } }
   .team-card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
@@ -95,6 +141,11 @@
   .role-badge.agent{ background:#f1f3f2; color:var(--muted); }
   .team-result{ background:#f3f8f6; border:1px solid var(--line); border-radius:9px; padding:14px; margin-top:16px; font-size:12.5px; line-height:1.6; }
   .team-result b{ display:block; margin-bottom:2px; }
+
+  /* ---------- Export ---------- */
+  .export-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; max-width:560px; }
+  @media (max-width:600px){ .export-grid{ grid-template-columns:1fr; } }
+  .export-btn{ padding:16px 18px; text-align:left; font-size:14px; }
 </style>
 </head>
 <body>
@@ -123,99 +174,249 @@
 
 <!-- APP -->
 <section id="screen-app" class="screen">
-  <header class="app-header">
-    <div class="brand"><span class="brand-mark">A</span><span id="brand-name">Agent Portal</span></div>
-    <div class="header-right">
-      <span id="greeting-line"></span>
-      <button class="btn-secondary" id="logout-btn">Log out</button>
-    </div>
-  </header>
-
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-listings-btn">Listings</button>
-    <button class="tab-btn" id="tab-leads-btn">Leads</button>
-    <button class="tab-btn" id="tab-team-btn" hidden>Team</button>
-    <button class="tab-btn" id="tab-applications-btn" hidden>Applications</button>
-  </div>
-
-  <div class="panel-wrap">
-    <div id="panel-listings">
-      <div class="panel-header"><h2>Listings</h2><span class="count" id="listings-count"></span></div>
-      <div class="scroll-x">
-        <table>
-          <thead><tr><th>Address</th><th>Price</th><th>Beds/Baths</th><th>Status</th></tr></thead>
-          <tbody id="listings-tbody"></tbody>
-        </table>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><span class="brand-mark">A</span><span id="brand-name">Agent Portal</span></div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" id="tab-dashboard-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" id="tab-listings-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v10h5v-6h2v6h5V10"/></svg>
+          Listings
+        </button>
+        <button class="nav-item" id="tab-leads-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.7-4 3.6-6.5 7.5-6.5s6.8 2.5 7.5 6.5"/></svg>
+          Leads
+        </button>
+        <button class="nav-item" id="tab-team-btn" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.5 2.8-5.8 5.5-5.8s5 2.3 5.5 5.8"/><path d="M15 20c.3-2.4 1.6-4.1 3.7-4.6"/></svg>
+          Team
+        </button>
+        <button class="nav-item" id="tab-applications-btn" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9.5 13h6M9.5 16.5h6"/></svg>
+          Applications
+        </button>
+        <button class="nav-item" id="tab-showings-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9.5h18M8 3v4M16 3v4"/></svg>
+          Showings
+        </button>
+        <button class="nav-item" id="tab-transactions-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19"/><path d="M16.8 6.8c-.6-1.4-2.2-2.3-4.3-2.3-2.6 0-4.7 1.4-4.7 3.4s2.1 2.9 4.7 3.4c2.6.5 4.7 1.4 4.7 3.4s-2.1 3.4-4.7 3.4c-2.1 0-3.7-.9-4.3-2.3"/></svg>
+          Transactions
+        </button>
+        <button class="nav-item" id="tab-export-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>
+          Export
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="greeting-line"></div>
+        <button class="btn-secondary" id="logout-btn" type="button">Log out</button>
       </div>
-    </div>
+    </aside>
 
-    <div id="panel-leads" hidden>
-      <div class="panel-header"><h2>Leads</h2><span class="count" id="leads-count"></span></div>
-      <div class="scroll-x">
-        <table>
-          <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Listing / Details</th><th>Message</th><th>Status</th></tr></thead>
-          <tbody id="leads-tbody"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="main-col">
+      <header class="topbar"><h1 id="page-title">Dashboard</h1></header>
 
-    <div id="panel-team" hidden>
-      <div class="panel-header"><h2>Team</h2><span class="count" id="team-count"></span></div>
-      <div class="team-layout">
-        <div class="scroll-x">
-          <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
-            <tbody id="team-tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="team-card">
-          <h3>Add an agent</h3>
-          <p class="sub">Give them a login to Fieldsheet and this CRM.</p>
-          <div class="form-error" id="team-form-error" hidden></div>
-          <form id="add-agent-form">
-            <div class="field">
-              <label for="agent-name">Name</label>
-              <input id="agent-name" placeholder="Jordan Lee">
+      <div class="panel-wrap">
+        <div id="panel-dashboard">
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-label">Active listings</div><div class="stat-value" id="stat-active-listings">0</div></div>
+            <div class="stat-card"><div class="stat-label">New leads</div><div class="stat-value" id="stat-new-leads">0</div></div>
+            <div class="stat-card"><div class="stat-label">Open deals</div><div class="stat-value" id="stat-open-deals">0</div></div>
+            <div class="stat-card"><div class="stat-label">Scheduled showings</div><div class="stat-value" id="stat-scheduled-showings">0</div></div>
+          </div>
+          <div class="dash-grid">
+            <div class="dash-panel">
+              <h3>Pipeline value</h3>
+              <div class="pipeline-value" id="pipeline-value">$0</div>
+              <p class="sub">Total offer price across open deals (offer + under contract).</p>
             </div>
-            <div class="field">
-              <label for="agent-email">Email</label>
-              <input id="agent-email" type="email" placeholder="jordan@yourbrokerage.com">
+            <div class="dash-panel">
+              <h3>Recent leads</h3>
+              <ul class="mini-list" id="recent-leads-list"></ul>
             </div>
-            <div class="field">
-              <label for="agent-role">Role</label>
-              <select id="agent-role">
-                <option value="agent" selected>Agent</option>
-                <option value="admin">Admin</option>
-              </select>
+            <div class="dash-panel">
+              <h3>Upcoming showings</h3>
+              <ul class="mini-list" id="upcoming-showings-list"></ul>
             </div>
-            <div class="field">
-              <label for="agent-password">Temporary password</label>
-              <div class="password-row">
-                <input id="agent-password" placeholder="At least 6 characters">
-                <button type="button" class="btn-secondary" id="agent-generate-password-btn">Generate</button>
-              </div>
-            </div>
-            <button class="btn-primary" style="width:100%;" id="add-agent-btn" type="submit">Add Agent</button>
-          </form>
-          <div class="team-result" id="team-result" hidden>
-            <b id="team-result-name"></b>
-            <div>Email: <span id="team-result-email"></span></div>
-            <div>Password: <span id="team-result-password"></span></div>
-            <div id="team-result-note" style="margin-top:6px;color:var(--muted);"></div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div id="panel-applications" hidden>
-      <div class="panel-header"><h2>Applications</h2><span class="count" id="applications-count"></span></div>
-      <p style="color:var(--muted);font-size:12.5px;margin:-8px 0 14px;">Only visible to admins — submitted through "Join Our Team" on your public site.</p>
-      <div class="scroll-x">
-        <table>
-          <thead><tr><th>Name</th><th>Contact</th><th>Position</th><th>Message</th><th>Status</th></tr></thead>
-          <tbody id="applications-tbody"></tbody>
-        </table>
+        <div id="panel-listings" hidden>
+          <div class="panel-header"><h2>Listings</h2><span class="count" id="listings-count"></span></div>
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Address</th><th>Price</th><th>Beds/Baths</th><th>Status</th></tr></thead>
+              <tbody id="listings-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="panel-leads" hidden>
+          <div class="panel-header"><h2>Leads</h2><span class="count" id="leads-count"></span></div>
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Listing / Details</th><th>Message</th><th>Status</th></tr></thead>
+              <tbody id="leads-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="panel-team" hidden>
+          <div class="panel-header"><h2>Team</h2><span class="count" id="team-count"></span></div>
+          <div class="team-layout">
+            <div class="scroll-x">
+              <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+                <tbody id="team-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="team-card">
+              <h3>Add an agent</h3>
+              <p class="sub">Give them a login to Fieldsheet and this CRM.</p>
+              <div class="form-error" id="team-form-error" hidden></div>
+              <form id="add-agent-form">
+                <div class="field">
+                  <label for="agent-name">Name</label>
+                  <input id="agent-name" placeholder="Jordan Lee">
+                </div>
+                <div class="field">
+                  <label for="agent-email">Email</label>
+                  <input id="agent-email" type="email" placeholder="jordan@yourbrokerage.com">
+                </div>
+                <div class="field">
+                  <label for="agent-role">Role</label>
+                  <select id="agent-role">
+                    <option value="agent" selected>Agent</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="agent-password">Temporary password</label>
+                  <div class="password-row">
+                    <input id="agent-password" placeholder="At least 6 characters">
+                    <button type="button" class="btn-secondary" id="agent-generate-password-btn">Generate</button>
+                  </div>
+                </div>
+                <button class="btn-primary" style="width:100%;" id="add-agent-btn" type="submit">Add Agent</button>
+              </form>
+              <div class="team-result" id="team-result" hidden>
+                <b id="team-result-name"></b>
+                <div>Email: <span id="team-result-email"></span></div>
+                <div>Password: <span id="team-result-password"></span></div>
+                <div id="team-result-note" style="margin-top:6px;color:var(--muted);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-applications" hidden>
+          <div class="panel-header"><h2>Applications</h2><span class="count" id="applications-count"></span></div>
+          <p style="color:var(--muted);font-size:12.5px;margin:-8px 0 14px;">Only visible to admins — submitted through "Join Our Team" on your public site.</p>
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Name</th><th>Contact</th><th>Position</th><th>Message</th><th>Resume</th><th>Status</th></tr></thead>
+              <tbody id="applications-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="panel-showings" hidden>
+          <div class="panel-header"><h2>Showings</h2><span class="count" id="showings-count"></span></div>
+          <div class="team-layout">
+            <div class="scroll-x">
+              <table>
+                <thead><tr><th>Listing</th><th>Lead</th><th>Date</th><th>Time</th><th>Status</th><th>Notes</th></tr></thead>
+                <tbody id="showings-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="team-card">
+              <h3>Schedule a showing</h3>
+              <p class="sub">Book a walkthrough for a listing.</p>
+              <div class="form-error" id="showing-form-error" hidden></div>
+              <form id="add-showing-form">
+                <div class="field">
+                  <label for="showing-listing">Listing</label>
+                  <select id="showing-listing"></select>
+                </div>
+                <div class="field">
+                  <label for="showing-lead">Lead (optional)</label>
+                  <select id="showing-lead"><option value="">— none —</option></select>
+                </div>
+                <div class="field">
+                  <label for="showing-date">Date</label>
+                  <input id="showing-date" type="date">
+                </div>
+                <div class="field">
+                  <label for="showing-time">Time</label>
+                  <input id="showing-time" type="time">
+                </div>
+                <div class="field">
+                  <label for="showing-notes">Notes</label>
+                  <input id="showing-notes" placeholder="Optional">
+                </div>
+                <button class="btn-primary" style="width:100%;" id="add-showing-btn" type="submit">Schedule Showing</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-transactions" hidden>
+          <div class="panel-header"><h2>Transactions</h2><span class="count" id="transactions-count"></span></div>
+          <div class="team-layout">
+            <div class="scroll-x">
+              <table>
+                <thead><tr><th>Listing</th><th>Lead</th><th>Offer Price</th><th>Closing Date</th><th>Stage</th><th>Notes</th></tr></thead>
+                <tbody id="transactions-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="team-card">
+              <h3>New transaction</h3>
+              <p class="sub">Track a deal from offer to close.</p>
+              <div class="form-error" id="transaction-form-error" hidden></div>
+              <form id="add-transaction-form">
+                <div class="field">
+                  <label for="transaction-listing">Listing</label>
+                  <select id="transaction-listing"></select>
+                </div>
+                <div class="field">
+                  <label for="transaction-lead">Lead (optional)</label>
+                  <select id="transaction-lead"><option value="">— none —</option></select>
+                </div>
+                <div class="field">
+                  <label for="transaction-offer-price">Offer price</label>
+                  <input id="transaction-offer-price" type="number" placeholder="450000">
+                </div>
+                <div class="field">
+                  <label for="transaction-closing-date">Closing date</label>
+                  <input id="transaction-closing-date" type="date">
+                </div>
+                <div class="field">
+                  <label for="transaction-notes">Notes</label>
+                  <input id="transaction-notes" placeholder="Optional">
+                </div>
+                <button class="btn-primary" style="width:100%;" id="add-transaction-btn" type="submit">Create Transaction</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-export" hidden>
+          <div class="panel-header"><h2>Export</h2></div>
+          <p style="color:var(--muted);font-size:12.5px;margin:-8px 0 18px;">Download your data as CSV files.</p>
+          <div class="export-grid">
+            <button class="btn-secondary export-btn" id="export-listings-btn" type="button">Export Listings</button>
+            <button class="btn-secondary export-btn" id="export-leads-btn" type="button">Export Leads</button>
+            <button class="btn-secondary export-btn" id="export-showings-btn" type="button">Export Showings</button>
+            <button class="btn-secondary export-btn" id="export-transactions-btn" type="button">Export Transactions</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -249,10 +450,15 @@
     if(n === null || n === undefined || n === '' || isNaN(n)) return '—';
     return '$' + Number(n).toLocaleString('en-US');
   }
+  function titleCase(s){
+    return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+  }
 
   var session = null;
   var listings = [];
   var leads = [];
+  var showings = [];
+  var transactions = [];
 
   // ---------- Login (same accounts as Fieldsheet -- one login works across both) ----------
   function loadAppUserProfile(userId){
@@ -302,8 +508,14 @@
     show('screen-app');
     $('tab-team-btn').hidden = session.role !== 'admin';
     $('tab-applications-btn').hidden = session.role !== 'admin';
-    activateTab('listings');
-    var chain = loadListings().then(loadLeads);
+    activateTab('dashboard');
+    var chain = loadListings().then(loadLeads).then(loadShowings).then(loadTransactions).then(function(){
+      populateListingSelect($('showing-listing'));
+      populateLeadSelect($('showing-lead'));
+      populateListingSelect($('transaction-listing'));
+      populateLeadSelect($('transaction-lead'));
+      renderDashboard();
+    });
     if(session.role === 'admin') chain = chain.then(loadTeam).then(loadApplications);
     return chain;
   }
@@ -356,6 +568,7 @@
             flash.classList.add('show');
             setTimeout(function(){ flash.classList.remove('show'); }, 1200);
           }
+          renderDashboard();
         });
       });
     });
@@ -376,6 +589,10 @@
     var l = listings.find(function(x){ return x.id === listingId; });
     if(!l) return '—';
     return [l.address, l.city].filter(Boolean).join(', ') || 'Listing';
+  }
+  function leadLabel(leadId){
+    var l = leads.find(function(x){ return x.id === leadId; });
+    return l ? (l.name || '—') : '—';
   }
 
   // "Listing / Details" column means something different depending on which
@@ -429,6 +646,7 @@
             flash.classList.add('show');
             setTimeout(function(){ flash.classList.remove('show'); }, 1200);
           }
+          renderDashboard();
         });
       });
     });
@@ -548,7 +766,7 @@
     var tbody = $('applications-tbody');
     $('applications-count').textContent = applications.length + (applications.length === 1 ? ' application' : ' applications');
     if(!applications.length){
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No applications yet — these show up as soon as someone submits "Join Our Team" on your public site.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No applications yet — these show up as soon as someone submits "Join Our Team" on your public site.</td></tr>';
       return;
     }
     tbody.innerHTML = applications.map(function(a){
@@ -557,6 +775,9 @@
         '<td>' + escapeHtml(a.email || '') + (a.phone ? '<div class="row-sub">' + escapeHtml(a.phone) + '</div>' : '') + '</td>' +
         '<td>' + escapeHtml(a.position || '—') + '</td>' +
         '<td class="msg-cell">' + escapeHtml(a.message || '—') + '</td>' +
+        '<td>' + (a.resume_path
+          ? '<button type="button" class="btn-secondary resume-view-btn" data-path="' + escapeHtml(a.resume_path) + '">View</button>'
+          : '<span class="row-sub">None</span>') + '</td>' +
         '<td>' +
           '<select class="status-select ' + a.status + '" data-id="' + a.id + '">' +
             LEAD_APP_STATUSES.map(function(s){ return '<option value="' + s + '"' + (s === a.status ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>'; }).join('') +
@@ -583,23 +804,346 @@
         });
       });
     });
+
+    // Resumes live in a private storage bucket -- there's no bare URL, so
+    // each click asks Supabase for a short-lived signed URL and opens that.
+    Array.prototype.forEach.call(tbody.querySelectorAll('.resume-view-btn'), function(btn){
+      btn.addEventListener('click', function(){
+        var path = btn.getAttribute('data-path');
+        var originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Opening…';
+        sb.storage.from('resumes').createSignedUrl(path, 300).then(function(res){
+          if(res.error || !res.data || !res.data.signedUrl){
+            btn.textContent = 'Unavailable';
+            return;
+          }
+          window.open(res.data.signedUrl, '_blank');
+          btn.textContent = originalText;
+        }).finally(function(){
+          btn.disabled = false;
+        });
+      });
+    });
   }
 
-  // ---------- Tabs ----------
-  function activateTab(name){
-    $('tab-listings-btn').classList.toggle('active', name === 'listings');
-    $('tab-leads-btn').classList.toggle('active', name === 'leads');
-    $('tab-team-btn').classList.toggle('active', name === 'team');
-    $('tab-applications-btn').classList.toggle('active', name === 'applications');
-    $('panel-listings').hidden = name !== 'listings';
-    $('panel-leads').hidden = name !== 'leads';
-    $('panel-team').hidden = name !== 'team';
-    $('panel-applications').hidden = name !== 'applications';
+  // ---------- Showings ----------
+  // Any agent in the company can schedule/manage showings (same "whole
+  // team can see it" pattern as listings and leads, not the admin-only
+  // pattern used for Team/Applications) -- schema.sql's "own company
+  // showings" policy has no role restriction.
+  var SHOWING_STATUSES = ['scheduled', 'completed', 'cancelled', 'no_show'];
+
+  function loadShowings(){
+    return sb.from('showings').select('*').then(function(res){
+      if(res.error){ console.warn('Could not load showings:', res.error.message); return; }
+      showings = (res.data || []).sort(function(a, b){
+        var da = (a.scheduled_date || '') + ' ' + (a.scheduled_time || '');
+        var db = (b.scheduled_date || '') + ' ' + (b.scheduled_time || '');
+        return da.localeCompare(db);
+      });
+      renderShowings();
+    });
   }
-  $('tab-listings-btn').addEventListener('click', function(){ activateTab('listings'); });
-  $('tab-leads-btn').addEventListener('click', function(){ activateTab('leads'); });
-  $('tab-team-btn').addEventListener('click', function(){ activateTab('team'); });
-  $('tab-applications-btn').addEventListener('click', function(){ activateTab('applications'); });
+
+  function renderShowings(){
+    var tbody = $('showings-tbody');
+    $('showings-count').textContent = showings.length + (showings.length === 1 ? ' showing' : ' showings');
+    if(!showings.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No showings scheduled yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = showings.map(function(s){
+      return '<tr>' +
+        '<td class="row-primary">' + escapeHtml(listingLabel(s.listing_id)) + '</td>' +
+        '<td>' + escapeHtml(leadLabel(s.lead_id)) + '</td>' +
+        '<td>' + escapeHtml(s.scheduled_date || '—') + '</td>' +
+        '<td>' + escapeHtml(s.scheduled_time || '—') + '</td>' +
+        '<td>' +
+          '<select class="status-select ' + s.status + '" data-id="' + s.id + '">' +
+            SHOWING_STATUSES.map(function(st){ return '<option value="' + st + '"' + (st === s.status ? ' selected' : '') + '>' + titleCase(st) + '</option>'; }).join('') +
+          '</select>' +
+          '<span class="save-flash" id="showing-flash-' + s.id + '">Saved</span>' +
+        '</td>' +
+        '<td class="msg-cell">' + escapeHtml(s.notes || '—') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(tbody.querySelectorAll('.status-select'), function(sel){
+      sel.addEventListener('change', function(){
+        var id = sel.getAttribute('data-id');
+        var newStatus = sel.value;
+        sel.className = 'status-select ' + newStatus;
+        sb.from('showings').update({ status: newStatus }).eq('id', id).then(function(res){
+          if(res.error){ console.warn('Showing status update failed:', res.error.message); return; }
+          var s = showings.find(function(x){ return x.id === id; });
+          if(s) s.status = newStatus;
+          var flash = $('showing-flash-' + id);
+          if(flash){
+            flash.classList.add('show');
+            setTimeout(function(){ flash.classList.remove('show'); }, 1200);
+          }
+          renderDashboard();
+        });
+      });
+    });
+  }
+
+  function setAddShowingBusy(busy){
+    var btn = $('add-showing-btn');
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Scheduling…' : 'Schedule Showing';
+  }
+
+  $('add-showing-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var listingId = $('showing-listing').value;
+    var leadId = $('showing-lead').value || null;
+    var date = $('showing-date').value || null;
+    var time = $('showing-time').value || null;
+    var notes = $('showing-notes').value.trim() || null;
+
+    $('showing-form-error').hidden = true;
+    if(!listingId){
+      $('showing-form-error').textContent = 'Choose a listing.';
+      $('showing-form-error').hidden = false;
+      return;
+    }
+
+    setAddShowingBusy(true);
+    sb.from('showings').insert({
+      company_id: session.companyId, listing_id: listingId, lead_id: leadId,
+      scheduled_date: date, scheduled_time: time, notes: notes
+    }).then(function(res){
+      if(res.error) throw new Error(res.error.message);
+      $('add-showing-form').reset();
+      return loadShowings();
+    }).then(function(){
+      renderDashboard();
+    }).catch(function(err){
+      $('showing-form-error').textContent = (err && err.message) ? err.message : 'Something went wrong.';
+      $('showing-form-error').hidden = false;
+    }).finally(function(){
+      setAddShowingBusy(false);
+    });
+  });
+
+  // ---------- Transactions ----------
+  // Same whole-team visibility as showings/listings/leads -- schema.sql's
+  // "own company transactions" policy has no role restriction either.
+  var TRANSACTION_STAGES = ['offer', 'under_contract', 'closed', 'fell_through'];
+
+  function loadTransactions(){
+    return sb.from('transactions').select('*').then(function(res){
+      if(res.error){ console.warn('Could not load transactions:', res.error.message); return; }
+      transactions = (res.data || []).sort(function(a, b){ return new Date(b.created_at) - new Date(a.created_at); });
+      renderTransactions();
+    });
+  }
+
+  function renderTransactions(){
+    var tbody = $('transactions-tbody');
+    $('transactions-count').textContent = transactions.length + (transactions.length === 1 ? ' transaction' : ' transactions');
+    if(!transactions.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No transactions yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = transactions.map(function(t){
+      return '<tr>' +
+        '<td class="row-primary">' + escapeHtml(listingLabel(t.listing_id)) + '</td>' +
+        '<td>' + escapeHtml(leadLabel(t.lead_id)) + '</td>' +
+        '<td>' + fmtMoney(t.offer_price) + '</td>' +
+        '<td>' + escapeHtml(t.closing_date || '—') + '</td>' +
+        '<td>' +
+          '<select class="status-select ' + t.stage + '" data-id="' + t.id + '">' +
+            TRANSACTION_STAGES.map(function(st){ return '<option value="' + st + '"' + (st === t.stage ? ' selected' : '') + '>' + titleCase(st) + '</option>'; }).join('') +
+          '</select>' +
+          '<span class="save-flash" id="transaction-flash-' + t.id + '">Saved</span>' +
+        '</td>' +
+        '<td class="msg-cell">' + escapeHtml(t.notes || '—') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(tbody.querySelectorAll('.status-select'), function(sel){
+      sel.addEventListener('change', function(){
+        var id = sel.getAttribute('data-id');
+        var newStage = sel.value;
+        sel.className = 'status-select ' + newStage;
+        sb.from('transactions').update({ stage: newStage }).eq('id', id).then(function(res){
+          if(res.error){ console.warn('Transaction stage update failed:', res.error.message); return; }
+          var t = transactions.find(function(x){ return x.id === id; });
+          if(t) t.stage = newStage;
+          var flash = $('transaction-flash-' + id);
+          if(flash){
+            flash.classList.add('show');
+            setTimeout(function(){ flash.classList.remove('show'); }, 1200);
+          }
+          renderDashboard();
+        });
+      });
+    });
+  }
+
+  function setAddTransactionBusy(busy){
+    var btn = $('add-transaction-btn');
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Creating…' : 'Create Transaction';
+  }
+
+  $('add-transaction-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var listingId = $('transaction-listing').value;
+    var leadId = $('transaction-lead').value || null;
+    var offerPriceRaw = $('transaction-offer-price').value;
+    var offerPrice = offerPriceRaw === '' ? null : Number(offerPriceRaw);
+    var closingDate = $('transaction-closing-date').value || null;
+    var notes = $('transaction-notes').value.trim() || null;
+
+    $('transaction-form-error').hidden = true;
+    if(!listingId){
+      $('transaction-form-error').textContent = 'Choose a listing.';
+      $('transaction-form-error').hidden = false;
+      return;
+    }
+
+    setAddTransactionBusy(true);
+    sb.from('transactions').insert({
+      company_id: session.companyId, listing_id: listingId, lead_id: leadId,
+      offer_price: offerPrice, closing_date: closingDate, notes: notes
+    }).then(function(res){
+      if(res.error) throw new Error(res.error.message);
+      $('add-transaction-form').reset();
+      return loadTransactions();
+    }).then(function(){
+      renderDashboard();
+    }).catch(function(err){
+      $('transaction-form-error').textContent = (err && err.message) ? err.message : 'Something went wrong.';
+      $('transaction-form-error').hidden = false;
+    }).finally(function(){
+      setAddTransactionBusy(false);
+    });
+  });
+
+  // ---------- Shared select-population helper (Showings + Transactions forms) ----------
+  function populateListingSelect(selectEl){
+    if(!selectEl) return;
+    selectEl.innerHTML = listings.length
+      ? listings.map(function(l){
+          var label = [l.address, l.city].filter(Boolean).join(', ') || 'Untitled';
+          return '<option value="' + l.id + '">' + escapeHtml(label) + '</option>';
+        }).join('')
+      : '<option value="">No listings yet</option>';
+  }
+  function populateLeadSelect(selectEl){
+    if(!selectEl) return;
+    selectEl.innerHTML = '<option value="">— none —</option>' + leads.map(function(l){
+      return '<option value="' + l.id + '">' + escapeHtml(l.name || l.email || 'Lead') + '</option>';
+    }).join('');
+  }
+
+  // ---------- Dashboard ----------
+  function renderDashboard(){
+    var activeListings = listings.filter(function(l){ return l.status === 'active'; }).length;
+    var newLeads = leads.filter(function(l){ return l.status === 'new'; }).length;
+    var openDeals = transactions.filter(function(t){ return t.stage === 'offer' || t.stage === 'under_contract'; });
+    var scheduledShowings = showings.filter(function(s){ return s.status === 'scheduled'; });
+
+    $('stat-active-listings').textContent = activeListings;
+    $('stat-new-leads').textContent = newLeads;
+    $('stat-open-deals').textContent = openDeals.length;
+    $('stat-scheduled-showings').textContent = scheduledShowings.length;
+
+    var pipelineValue = openDeals.reduce(function(sum, t){ return sum + (Number(t.offer_price) || 0); }, 0);
+    $('pipeline-value').textContent = fmtMoney(pipelineValue);
+
+    var recentLeads = leads.slice(0, 5);
+    $('recent-leads-list').innerHTML = recentLeads.length ? recentLeads.map(function(l){
+      return '<li><span class="row-primary">' + escapeHtml(l.name || '—') + '</span><span class="row-sub">' +
+        escapeHtml(leadTypeLabel(l.lead_type || 'listing')) + ' · ' + escapeHtml(titleCase(l.status)) + '</span></li>';
+    }).join('') : '<li class="row-sub">No leads yet.</li>';
+
+    var upcoming = scheduledShowings.slice().sort(function(a, b){
+      return ((a.scheduled_date || '') + ' ' + (a.scheduled_time || '')).localeCompare((b.scheduled_date || '') + ' ' + (b.scheduled_time || ''));
+    }).slice(0, 5);
+    $('upcoming-showings-list').innerHTML = upcoming.length ? upcoming.map(function(s){
+      return '<li><span class="row-primary">' + escapeHtml(listingLabel(s.listing_id)) + '</span><span class="row-sub">' +
+        escapeHtml(s.scheduled_date || 'Date TBD') + (s.scheduled_time ? ' at ' + escapeHtml(s.scheduled_time) : '') + '</span></li>';
+    }).join('') : '<li class="row-sub">No showings scheduled.</li>';
+  }
+
+  // ---------- Export ----------
+  function toCsv(rows, columns){
+    var header = columns.map(function(c){ return '"' + c.label.replace(/"/g, '""') + '"'; }).join(',');
+    var lines = rows.map(function(r){
+      return columns.map(function(c){
+        var v = typeof c.value === 'function' ? c.value(r) : r[c.value];
+        return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      }).join(',');
+    });
+    return [header].concat(lines).join('\r\n');
+  }
+  function downloadCsv(filename, csvText){
+    var blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  $('export-listings-btn').addEventListener('click', function(){
+    downloadCsv('listings.csv', toCsv(listings, [
+      { label: 'Address', value: 'address' }, { label: 'City', value: 'city' }, { label: 'State', value: 'state' },
+      { label: 'Zip', value: 'zip' }, { label: 'Price', value: 'price' }, { label: 'Bedrooms', value: 'bedrooms' },
+      { label: 'Bathrooms', value: 'bathrooms' }, { label: 'Status', value: 'status' }
+    ]));
+  });
+  $('export-leads-btn').addEventListener('click', function(){
+    downloadCsv('leads.csv', toCsv(leads, [
+      { label: 'Name', value: 'name' }, { label: 'Email', value: 'email' }, { label: 'Phone', value: 'phone' },
+      { label: 'Type', value: function(l){ return leadTypeLabel(l.lead_type || 'listing'); } },
+      { label: 'Details', value: function(l){ return leadDetails(l); } },
+      { label: 'Status', value: 'status' }, { label: 'Message', value: 'message' }
+    ]));
+  });
+  $('export-showings-btn').addEventListener('click', function(){
+    downloadCsv('showings.csv', toCsv(showings, [
+      { label: 'Listing', value: function(s){ return listingLabel(s.listing_id); } },
+      { label: 'Lead', value: function(s){ return leadLabel(s.lead_id); } },
+      { label: 'Date', value: 'scheduled_date' }, { label: 'Time', value: 'scheduled_time' },
+      { label: 'Status', value: 'status' }, { label: 'Notes', value: 'notes' }
+    ]));
+  });
+  $('export-transactions-btn').addEventListener('click', function(){
+    downloadCsv('transactions.csv', toCsv(transactions, [
+      { label: 'Listing', value: function(t){ return listingLabel(t.listing_id); } },
+      { label: 'Lead', value: function(t){ return leadLabel(t.lead_id); } },
+      { label: 'Offer Price', value: 'offer_price' }, { label: 'Closing Date', value: 'closing_date' },
+      { label: 'Stage', value: 'stage' }, { label: 'Notes', value: 'notes' }
+    ]));
+  });
+
+  // ---------- Tabs (sidebar nav) ----------
+  var TAB_NAMES = ['dashboard', 'listings', 'leads', 'team', 'applications', 'showings', 'transactions', 'export'];
+  var TAB_TITLES = { dashboard: 'Dashboard', listings: 'Listings', leads: 'Leads', team: 'Team', applications: 'Applications', showings: 'Showings', transactions: 'Transactions', export: 'Export' };
+
+  function activateTab(name){
+    TAB_NAMES.forEach(function(n){
+      var btn = $('tab-' + n + '-btn');
+      if(btn) btn.classList.toggle('active', n === name);
+      var panel = $('panel-' + n);
+      if(panel) panel.hidden = n !== name;
+    });
+    var titleEl = $('page-title');
+    if(titleEl) titleEl.textContent = TAB_TITLES[name] || '';
+  }
+  TAB_NAMES.forEach(function(n){
+    var btn = $('tab-' + n + '-btn');
+    if(btn) btn.addEventListener('click', function(){ activateTab(n); });
+  });
 
   // ---------- Boot ----------
   function boot(){
