@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Admin</title>
+<style>
+  :root{
+    --accent:#0f5c4c; --accent-dark:#0b4638; --ink:#1a2420; --muted:#5b6b64;
+    --line:#e3e8e5; --bg:#f7f9f8; --card:#ffffff; --danger:#a1281a;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  [hidden]{ display:none !important; }
+
+  .wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:32px; width:100%; max-width:460px; box-shadow:0 12px 30px rgba(20,30,25,.08); }
+  .card h1{ font-size:20px; margin:0 0 4px; }
+  .card p.sub{ color:var(--muted); font-size:13.5px; margin:0 0 22px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+  .field input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+  .field-hint{ font-size:12px; color:var(--muted); margin-top:4px; }
+  .btn-primary{ background:var(--accent); color:#fff; border:none; border-radius:9px; padding:11px 18px; font-size:14.5px; font-weight:700; cursor:pointer; }
+  .btn-primary:hover{ background:var(--accent-dark); }
+  .btn-primary:disabled{ opacity:.6; cursor:default; }
+  .btn-secondary{ background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:600; cursor:pointer; }
+  .error-banner{ background:#fdeceb; color:var(--danger); border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:14px; }
+  .password-row{ display:flex; gap:8px; }
+  .password-row input{ flex:1; }
+
+  header.app-header{
+    background:#fff; border-bottom:1px solid var(--line); padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; }
+  .brand-mark{ width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; }
+  .header-right{ font-size:13.5px; color:var(--muted); display:flex; align-items:center; gap:14px; }
+  .content{ max-width:520px; margin:0 auto; padding:32px 24px 60px; }
+  .content h2{ font-size:19px; margin:0 0 4px; }
+  .content p.sub{ color:var(--muted); font-size:13.5px; margin:0 0 26px; }
+
+  .result-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-top:20px; }
+  .result-card h3{ margin:0 0 12px; font-size:15px; }
+  .result-row{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .result-row:last-child{ border-bottom:none; }
+  .result-row b{ font-weight:600; }
+  .result-note{ font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  .result-links{ display:flex; gap:10px; margin-top:16px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="screen-login" class="screen active">
+  <div class="wrap">
+    <div class="card">
+      <h1>Platform Admin</h1>
+      <p class="sub">Sign in with your usual Fieldsheet account.</p>
+      <div class="error-banner" id="login-error" hidden></div>
+      <form id="login-form">
+        <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username"></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
+        <button class="btn-primary" style="width:100%;" id="login-submit-btn" type="submit">Log in</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="screen-app" class="screen">
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark">P</span><span>Platform Admin</span></div>
+    <div class="header-right"><span id="greeting-line"></span><button class="btn-secondary" id="logout-btn">Log out</button></div>
+  </header>
+
+  <div class="content">
+    <h2>Create a new brokerage</h2>
+    <p class="sub">Spin up a brand-new company with its own login, marketplace, and CRM — this is what you'll do once for each customer.</p>
+
+    <div class="error-banner" id="form-error" hidden></div>
+
+    <form id="create-form">
+      <div class="field">
+        <label for="company-name">Brokerage name</label>
+        <input id="company-name" placeholder="Acme Realty">
+      </div>
+      <div class="field">
+        <label for="company-slug">Marketplace link slug</label>
+        <input id="company-slug" placeholder="acme-realty">
+        <div class="field-hint" id="slug-preview"></div>
+      </div>
+      <div class="field">
+        <label for="admin-name">Admin's name</label>
+        <input id="admin-name" placeholder="Jane Smith">
+      </div>
+      <div class="field">
+        <label for="admin-email">Admin's login email</label>
+        <input id="admin-email" type="email" placeholder="jane@acmerealty.com">
+      </div>
+      <div class="field">
+        <label for="admin-password">Temporary password</label>
+        <div class="password-row">
+          <input id="admin-password" placeholder="At least 6 characters">
+          <button type="button" class="btn-secondary" id="generate-password-btn">Generate</button>
+        </div>
+        <div class="field-hint">Share this with them — they can change it later.</div>
+      </div>
+      <button class="btn-primary" style="width:100%;" id="create-submit-btn" type="submit">Create Brokerage</button>
+    </form>
+
+    <div class="result-card" id="result-card" hidden>
+      <h3 id="result-title"></h3>
+      <div class="result-row"><span>Login email</span><b id="result-email"></b></div>
+      <div class="result-row"><span>Password</span><b id="result-password"></b></div>
+      <div class="result-row"><span>Marketplace</span><b id="result-marketplace"></b></div>
+      <div class="result-row"><span>CRM</span><b id="result-crm"></b></div>
+      <div class="result-note" id="result-note"></div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://ohtiuqghsmuvlthhvkcn.supabase.co';
+  var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_0tz9RnGQB8yiEbpsumkwlw_QPRn-r6L';
+
+  // Main client -- carries Matt's own logged-in session, used for every
+  // privileged read/write (creating the company + app_users row).
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  // A second, independent client used ONLY to sign up the brand-new
+  // brokerage admin's account. It's configured not to persist or share
+  // session storage with the main client above, so creating that account
+  // never logs Matt out of his own session mid-flow.
+  var sbSignup = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, storageKey: 'fieldsheet-admin-signup-throwaway' }
+  });
+
+  function $(id){ return document.getElementById(id); }
+  function show(id){
+    Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(s){ s.classList.remove('active'); });
+    $(id).classList.add('active');
+  }
+  function slugify(s){
+    return String(s || '').toLowerCase().trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  var session = null;
+
+  // ---------- Login ----------
+  function loadAppUserProfile(userId){
+    return sb.from('app_users').select('*').eq('id', userId).single();
+  }
+  function applySignedInSession(authUser, profile){
+    session = { userId: authUser.id, email: authUser.email, name: profile.name };
+  }
+  function setLoginBusy(busy){
+    var btn = $('login-submit-btn');
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Signing in…' : 'Log in';
+  }
+
+  // This page is only ever meant for you, the platform operator -- never for
+  // a brokerage customer's own login, even though customers authenticate
+  // through the same Supabase project. is_platform_admin() is the same
+  // database check the RLS insert policies use (see schema.sql), so "can see
+  // this form" and "can actually create a company" are always the same
+  // answer -- there's no way for someone to see a form here that the
+  // database would then silently reject.
+  function checkPlatformAdmin(){
+    return sb.rpc('is_platform_admin').then(function(res){
+      if(res.error) return false;
+      return res.data === true;
+    }).catch(function(){ return false; });
+  }
+  function rejectNonAdmin(){
+    return sb.auth.signOut().then(function(){
+      session = null;
+      show('screen-login');
+      $('login-error').textContent = 'This account doesn\'t have access to Platform Admin.';
+      $('login-error').hidden = false;
+    });
+  }
+
+  $('login-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = $('email').value.trim();
+    var pw = $('password').value.trim();
+    if(!email || !pw) return;
+    $('login-error').hidden = true;
+    setLoginBusy(true);
+    var signedInUser = null, signedInProfile = null;
+    sb.auth.signInWithPassword({ email: email, password: pw }).then(function(res){
+      if(res.error) throw res.error;
+      signedInUser = res.data.user;
+      return loadAppUserProfile(signedInUser.id);
+    }).then(function(profileRes){
+      if(profileRes.error || !profileRes.data){
+        throw new Error('Signed in, but no profile is set up for this account yet.');
+      }
+      signedInProfile = profileRes.data;
+      return checkPlatformAdmin();
+    }).then(function(isAdmin){
+      if(!isAdmin) return rejectNonAdmin();
+      applySignedInSession(signedInUser, signedInProfile);
+      $('greeting-line').textContent = session.name || session.email;
+      show('screen-app');
+    }).catch(function(err){
+      $('login-error').textContent = (err && err.message) ? err.message : 'Something went wrong signing in.';
+      $('login-error').hidden = false;
+    }).finally(function(){
+      setLoginBusy(false);
+    });
+  });
+
+  $('logout-btn').addEventListener('click', function(){
+    sb.auth.signOut();
+    session = null;
+    show('screen-login');
+  });
+
+  // ---------- Create brokerage ----------
+  $('company-name').addEventListener('input', function(){
+    var suggested = slugify($('company-name').value);
+    $('company-slug').value = suggested;
+    $('slug-preview').textContent = suggested ? ('marketplace.html?co=' + suggested) : '';
+  });
+  $('company-slug').addEventListener('input', function(){
+    $('company-slug').value = slugify($('company-slug').value);
+    $('slug-preview').textContent = $('company-slug').value ? ('marketplace.html?co=' + $('company-slug').value) : '';
+  });
+
+  $('generate-password-btn').addEventListener('click', function(){
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    var pw = '';
+    for(var i = 0; i < 10; i++){ pw += chars.charAt(Math.floor(Math.random() * chars.length)); }
+    $('admin-password').value = pw;
+  });
+
+  function setCreateBusy(busy){
+    var btn = $('create-submit-btn');
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Creating…' : 'Create Brokerage';
+  }
+
+  $('create-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var companyName = $('company-name').value.trim();
+    var slug = $('company-slug').value.trim();
+    var adminName = $('admin-name').value.trim();
+    var adminEmail = $('admin-email').value.trim();
+    var adminPassword = $('admin-password').value.trim();
+
+    $('form-error').hidden = true;
+    $('result-card').hidden = true;
+
+    if(!companyName || !slug || !adminName || !adminEmail || !adminPassword){
+      $('form-error').textContent = 'Please fill in every field.';
+      $('form-error').hidden = false;
+      return;
+    }
+    if(adminPassword.length < 6){
+      $('form-error').textContent = 'Password needs to be at least 6 characters.';
+      $('form-error').hidden = false;
+      return;
+    }
+
+    setCreateBusy(true);
+    var newUserId = null;
+    var needsConfirmation = false;
+
+    sbSignup.auth.signUp({ email: adminEmail, password: adminPassword }).then(function(signUpRes){
+      if(signUpRes.error) throw new Error('Could not create that login: ' + signUpRes.error.message);
+      if(!signUpRes.data || !signUpRes.data.user) throw new Error('Sign-up did not return a new user.');
+
+      // When this project requires email confirmation and adminEmail is
+      // ALREADY registered to some account, Supabase does not return an
+      // error here -- it silently hands back a fake user object (empty
+      // `identities`, no real row in auth.users) so that this form can't be
+      // used to probe which emails already exist. If we don't catch that
+      // here, we'd go on to create the company and then fail on the
+      // app_users insert with a confusing foreign-key error, leaving an
+      // orphaned company behind. Catch it up front instead, with a plain
+      // explanation.
+      var identities = signUpRes.data.user.identities;
+      if(Array.isArray(identities) && identities.length === 0){
+        throw new Error('That email is already registered to a Fieldsheet login (maybe your own admin account?). Use a different email address for this brokerage\'s admin.');
+      }
+      newUserId = signUpRes.data.user.id;
+      needsConfirmation = !signUpRes.data.session;
+
+      // Look for an existing company with this slug first. Normally this
+      // finds nothing and we insert fresh below -- but if an EARLIER attempt
+      // at this exact brokerage already created the company and then failed
+      // before it could attach an admin login (e.g. the case above), reuse
+      // that leftover row instead of erroring out on a duplicate slug.
+      return sb.from('companies').select('id, name, slug').eq('slug', slug).maybeSingle();
+    }).then(function(existingRes){
+      if(existingRes.error) throw new Error('Could not check for an existing brokerage: ' + existingRes.error.message);
+      if(existingRes.data){
+        var existingCompany = existingRes.data;
+        return sb.from('app_users').select('id').eq('company_id', existingCompany.id).then(function(linkedRes){
+          if(linkedRes.error) throw new Error('Could not check the existing brokerage: ' + linkedRes.error.message);
+          if(linkedRes.data && linkedRes.data.length > 0){
+            throw new Error('That marketplace link ("' + slug + '") is already taken by an active brokerage — try a different one.');
+          }
+          return existingCompany; // orphaned from an earlier failed attempt -- reuse it
+        });
+      }
+      return sb.from('companies').insert({ name: companyName, slug: slug }).select().single().then(function(companyRes){
+        if(companyRes.error){
+          if(String(companyRes.error.message || '').indexOf('duplicate') !== -1){
+            throw new Error('That marketplace link ("' + slug + '") is already taken — try a different one.');
+          }
+          throw new Error('Could not create the company: ' + companyRes.error.message);
+        }
+        return companyRes.data;
+      });
+    }).then(function(company){
+      return sb.from('app_users').insert({
+        id: newUserId, company_id: company.id, name: adminName, email: adminEmail, role: 'admin'
+      }).then(function(appUserRes){
+        if(appUserRes.error) throw new Error('Created the company, but could not link the login to it: ' + appUserRes.error.message);
+        return company;
+      });
+    }).then(function(company){
+      $('result-title').textContent = company.name + ' is ready';
+      $('result-email').textContent = adminEmail;
+      $('result-password').textContent = adminPassword;
+      $('result-marketplace').textContent = 'marketplace.html?co=' + company.slug;
+      $('result-crm').textContent = 'crm.html';
+      $('result-note').textContent = needsConfirmation
+        ? 'Note: this Supabase project currently requires email confirmation, so this login may not work until you confirm it manually in Supabase (Authentication → Users → find ' + adminEmail + ' → confirm), or turn off "Confirm email" in Authentication settings for instant logins going forward.'
+        : 'This login works right now — hand these credentials to the brokerage.';
+      $('result-card').hidden = false;
+      $('create-form').reset();
+      $('slug-preview').textContent = '';
+    }).catch(function(err){
+      $('form-error').textContent = (err && err.message) ? err.message : 'Something went wrong.';
+      $('form-error').hidden = false;
+    }).finally(function(){
+      setCreateBusy(false);
+    });
+  });
+
+  // ---------- Boot ----------
+  function boot(){
+    sb.auth.getSession().then(function(res){
+      var authSession = res && res.data ? res.data.session : null;
+      if(!authSession){ show('screen-login'); return; }
+      var authSessionUser = authSession.user;
+      return loadAppUserProfile(authSessionUser.id).then(function(profileRes){
+        if(profileRes.error || !profileRes.data){
+          return sb.auth.signOut().then(function(){ show('screen-login'); });
+        }
+        var profile = profileRes.data;
+        return checkPlatformAdmin().then(function(isAdmin){
+          if(!isAdmin) return rejectNonAdmin();
+          applySignedInSession(authSessionUser, profile);
+          $('greeting-line').textContent = session.name || session.email;
+          show('screen-app');
+        });
+      });
+    }).catch(function(){ show('screen-login'); });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
