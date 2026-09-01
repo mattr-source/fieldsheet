@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Portal</title>
+<style>
+  :root{
+    --accent:#0f5c4c; --accent-dark:#0b4638; --ink:#1a2420; --muted:#5b6b64;
+    --line:#e3e8e5; --bg:#f7f9f8; --card:#ffffff; --radius:12px; --danger:#a1281a;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  [hidden]{ display:none !important; }
+
+  /* ---------- Login ---------- */
+  .login-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:32px; width:100%; max-width:380px; box-shadow:0 12px 30px rgba(20,30,25,.08); }
+  .login-card h1{ font-size:20px; margin:0 0 4px; }
+  .login-card p{ color:var(--muted); font-size:13.5px; margin:0 0 22px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+  .field input, .field select{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  .btn-primary{ background:var(--accent); color:#fff; border:none; border-radius:9px; padding:11px 18px; font-size:14.5px; font-weight:700; cursor:pointer; }
+  .btn-primary:hover{ background:var(--accent-dark); }
+  .btn-primary:disabled{ opacity:.6; cursor:default; }
+  .btn-secondary{ background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px 14px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .login-error{ background:#fdeceb; color:var(--danger); border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:14px; }
+
+  /* ---------- App shell ---------- */
+  header.app-header{
+    background:#fff; border-bottom:1px solid var(--line); padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; }
+  .brand-mark{ width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; }
+  .header-right{ display:flex; align-items:center; gap:14px; font-size:13.5px; color:var(--muted); }
+
+  .tabs{ display:flex; gap:4px; padding:14px 24px 0; max-width:1200px; margin:0 auto; }
+  .tab-btn{
+    background:none; border:none; padding:10px 16px; font-size:14px; font-weight:600; color:var(--muted);
+    cursor:pointer; border-bottom:2.5px solid transparent;
+  }
+  .tab-btn.active{ color:var(--accent-dark); border-bottom-color:var(--accent); }
+
+  .panel-wrap{ max-width:1200px; margin:0 auto; padding:18px 24px 60px; }
+  .panel-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .panel-header h2{ font-size:18px; margin:0; }
+  .panel-header .count{ color:var(--muted); font-size:13.5px; }
+
+  table{ width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); padding:11px 14px; background:#fbfcfc; border-bottom:1px solid var(--line); }
+  td{ padding:12px 14px; font-size:13.5px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  .row-primary{ font-weight:600; }
+  .row-sub{ color:var(--muted); font-size:12.5px; margin-top:2px; }
+  .status-select{ padding:6px 9px; border-radius:7px; border:1px solid var(--line); font-size:12.5px; font-weight:600; background:#fff; }
+  .status-select.draft{ color:#8a6d10; }
+  .status-select.active{ color:#1f6a3a; }
+  .status-select.pending{ color:#a15a1a; }
+  .status-select.sold, .status-select.lost{ color:var(--muted); }
+  .status-select.new{ color:#0f5c4c; }
+  .status-select.contacted{ color:#1a5aa1; }
+  .status-select.qualified{ color:#1f6a3a; }
+  .save-flash{ font-size:11.5px; color:var(--accent-dark); margin-left:8px; opacity:0; transition:opacity .3s; }
+  .save-flash.show{ opacity:1; }
+  .empty-row td{ text-align:center; color:var(--muted); padding:40px 14px; }
+  .msg-cell{ max-width:260px; color:var(--muted); }
+  .scroll-x{ overflow-x:auto; }
+  @media (max-width:720px){
+    .panel-wrap{ padding:14px; }
+    th, td{ padding:9px 10px; font-size:12.5px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>Agent Portal</h1>
+      <p>Sign in to manage your listings and leads.</p>
+      <div class="login-error" id="login-error" hidden></div>
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password">
+        </div>
+        <button class="btn-primary" style="width:100%;" id="login-submit-btn" type="submit">Log in</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="screen-app" class="screen">
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark">A</span><span id="brand-name">Agent Portal</span></div>
+    <div class="header-right">
+      <span id="greeting-line"></span>
+      <button class="btn-secondary" id="logout-btn">Log out</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-listings-btn">Listings</button>
+    <button class="tab-btn" id="tab-leads-btn">Leads</button>
+  </div>
+
+  <div class="panel-wrap">
+    <div id="panel-listings">
+      <div class="panel-header"><h2>Listings</h2><span class="count" id="listings-count"></span></div>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Address</th><th>Price</th><th>Beds/Baths</th><th>Status</th></tr></thead>
+          <tbody id="listings-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="panel-leads" hidden>
+      <div class="panel-header"><h2>Leads</h2><span class="count" id="leads-count"></span></div>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Listing</th><th>Message</th><th>Status</th></tr></thead>
+          <tbody id="leads-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://ohtiuqghsmuvlthhvkcn.supabase.co';
+  var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_0tz9RnGQB8yiEbpsumkwlw_QPRn-r6L';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  function $(id){ return document.getElementById(id); }
+  function show(id){
+    Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(s){ s.classList.remove('active'); });
+    $(id).classList.add('active');
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+  function fmtMoney(n){
+    if(n === null || n === undefined || n === '' || isNaN(n)) return '—';
+    return '$' + Number(n).toLocaleString('en-US');
+  }
+
+  var session = null;
+  var listings = [];
+  var leads = [];
+
+  // ---------- Login (same accounts as Fieldsheet -- one login works across both) ----------
+  function loadAppUserProfile(userId){
+    return sb.from('app_users').select('*').eq('id', userId).single();
+  }
+  function applySignedInSession(authUser, profile){
+    session = { userId: authUser.id, email: authUser.email, companyId: profile.company_id, name: profile.name, role: profile.role };
+  }
+  function setLoginBusy(busy){
+    var btn = $('login-submit-btn');
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Signing in…' : 'Log in';
+  }
+
+  $('login-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = $('email').value.trim();
+    var pw = $('password').value.trim();
+    if(!email || !pw) return;
+    $('login-error').hidden = true;
+    setLoginBusy(true);
+    sb.auth.signInWithPassword({ email: email, password: pw }).then(function(res){
+      if(res.error) throw res.error;
+      return loadAppUserProfile(res.data.user.id).then(function(profileRes){
+        if(profileRes.error || !profileRes.data){
+          throw new Error('Signed in, but no profile is set up for this account yet.');
+        }
+        applySignedInSession(res.data.user, profileRes.data);
+        return enterApp();
+      });
+    }).catch(function(err){
+      $('login-error').textContent = (err && err.message) ? err.message : 'Something went wrong signing in.';
+      $('login-error').hidden = false;
+    }).finally(function(){
+      setLoginBusy(false);
+    });
+  });
+
+  $('logout-btn').addEventListener('click', function(){
+    sb.auth.signOut();
+    session = null;
+    show('screen-login');
+  });
+
+  function enterApp(){
+    $('greeting-line').textContent = session.name || session.email;
+    show('screen-app');
+    return loadListings().then(loadLeads);
+  }
+
+  // ---------- Listings ----------
+  var LISTING_STATUSES = ['draft', 'active', 'pending', 'sold'];
+
+  function loadListings(){
+    return sb.from('listings').select('*').then(function(res){
+      if(res.error){ console.warn('Could not load listings:', res.error.message); return; }
+      listings = (res.data || []).sort(function(a, b){ return new Date(b.updated_at) - new Date(a.updated_at); });
+      renderListings();
+    });
+  }
+
+  function renderListings(){
+    var tbody = $('listings-tbody');
+    $('listings-count').textContent = listings.length + (listings.length === 1 ? ' listing' : ' listings');
+    if(!listings.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No listings yet — create one in Fieldsheet and it\'ll show up here.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = listings.map(function(l){
+      var addr = [l.address, l.unit].filter(Boolean).join(', ');
+      var cityline = [l.city, l.state].filter(Boolean).join(', ') + (l.zip ? (' ' + l.zip) : '');
+      return '<tr data-id="' + l.id + '">' +
+        '<td><div class="row-primary">' + escapeHtml(addr || 'Untitled') + '</div><div class="row-sub">' + escapeHtml(cityline) + '</div></td>' +
+        '<td>' + fmtMoney(l.price) + '</td>' +
+        '<td>' + (l.bedrooms != null ? l.bedrooms : '—') + ' bd / ' + (l.bathrooms != null ? l.bathrooms : '—') + ' ba</td>' +
+        '<td>' +
+          '<select class="status-select ' + l.status + '" data-id="' + l.id + '">' +
+            LISTING_STATUSES.map(function(s){ return '<option value="' + s + '"' + (s === l.status ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>'; }).join('') +
+          '</select>' +
+          '<span class="save-flash" id="flash-' + l.id + '">Saved</span>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(tbody.querySelectorAll('.status-select'), function(sel){
+      sel.addEventListener('change', function(){
+        var id = sel.getAttribute('data-id');
+        var newStatus = sel.value;
+        sel.className = 'status-select ' + newStatus;
+        sb.from('listings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id).then(function(res){
+          if(res.error){ console.warn('Status update failed:', res.error.message); return; }
+          var l = listings.find(function(x){ return x.id === id; });
+          if(l) l.status = newStatus;
+          var flash = $('flash-' + id);
+          if(flash){
+            flash.classList.add('show');
+            setTimeout(function(){ flash.classList.remove('show'); }, 1200);
+          }
+        });
+      });
+    });
+  }
+
+  // ---------- Leads ----------
+  var LEAD_STATUSES = ['new', 'contacted', 'qualified', 'lost'];
+
+  function loadLeads(){
+    return sb.from('leads').select('*').then(function(res){
+      if(res.error){ console.warn('Could not load leads:', res.error.message); return; }
+      leads = (res.data || []).sort(function(a, b){ return new Date(b.created_at) - new Date(a.created_at); });
+      renderLeads();
+    });
+  }
+
+  function listingLabel(listingId){
+    var l = listings.find(function(x){ return x.id === listingId; });
+    if(!l) return '—';
+    return [l.address, l.city].filter(Boolean).join(', ') || 'Listing';
+  }
+
+  function renderLeads(){
+    var tbody = $('leads-tbody');
+    $('leads-count').textContent = leads.length + (leads.length === 1 ? ' lead' : ' leads');
+    if(!leads.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No leads yet — these show up as soon as someone submits the "Request info" form on your public site.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = leads.map(function(l){
+      return '<tr>' +
+        '<td class="row-primary">' + escapeHtml(l.name || '—') + '</td>' +
+        '<td>' + escapeHtml(l.email || '') + (l.phone ? '<div class="row-sub">' + escapeHtml(l.phone) + '</div>' : '') + '</td>' +
+        '<td>' + escapeHtml(listingLabel(l.listing_id)) + '</td>' +
+        '<td class="msg-cell">' + escapeHtml(l.message || '—') + '</td>' +
+        '<td>' +
+          '<select class="status-select ' + l.status + '" data-id="' + l.id + '">' +
+            LEAD_STATUSES.map(function(s){ return '<option value="' + s + '"' + (s === l.status ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>'; }).join('') +
+          '</select>' +
+          '<span class="save-flash" id="lead-flash-' + l.id + '">Saved</span>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(tbody.querySelectorAll('.status-select'), function(sel){
+      sel.addEventListener('change', function(){
+        var id = sel.getAttribute('data-id');
+        var newStatus = sel.value;
+        sel.className = 'status-select ' + newStatus;
+        sb.from('leads').update({ status: newStatus }).eq('id', id).then(function(res){
+          if(res.error){ console.warn('Lead status update failed:', res.error.message); return; }
+          var l = leads.find(function(x){ return x.id === id; });
+          if(l) l.status = newStatus;
+          var flash = $('lead-flash-' + id);
+          if(flash){
+            flash.classList.add('show');
+            setTimeout(function(){ flash.classList.remove('show'); }, 1200);
+          }
+        });
+      });
+    });
+  }
+
+  // ---------- Tabs ----------
+  $('tab-listings-btn').addEventListener('click', function(){
+    $('tab-listings-btn').classList.add('active');
+    $('tab-leads-btn').classList.remove('active');
+    $('panel-listings').hidden = false;
+    $('panel-leads').hidden = true;
+  });
+  $('tab-leads-btn').addEventListener('click', function(){
+    $('tab-leads-btn').classList.add('active');
+    $('tab-listings-btn').classList.remove('active');
+    $('panel-leads').hidden = false;
+    $('panel-listings').hidden = true;
+  });
+
+  // ---------- Boot ----------
+  function boot(){
+    sb.auth.getSession().then(function(res){
+      var authSession = res && res.data ? res.data.session : null;
+      if(!authSession){ show('screen-login'); return; }
+      return loadAppUserProfile(authSession.user.id).then(function(profileRes){
+        if(profileRes.error || !profileRes.data){
+          return sb.auth.signOut().then(function(){ show('screen-login'); });
+        }
+        applySignedInSession(authSession.user, profileRes.data);
+        return enterApp();
+      });
+    }).catch(function(){ show('screen-login'); });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
