@@ -62,8 +62,14 @@
   .status-select.pending{ color:#a15a1a; }
   .status-select.sold, .status-select.lost{ color:var(--muted); }
   .status-select.new{ color:#0f5c4c; }
-  .status-select.contacted{ color:#1a5aa1; }
-  .status-select.qualified{ color:#1f6a3a; }
+  .status-select.contacted, .status-select.reviewing{ color:#1a5aa1; }
+  .status-select.qualified, .status-select.hired{ color:#1f6a3a; }
+  .status-select.interviewing{ color:#a15a1a; }
+  .status-select.rejected{ color:var(--muted); }
+  .type-badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; text-transform:capitalize; margin-bottom:3px; }
+  .type-badge.listing{ background:#eaf3ef; color:var(--accent-dark); }
+  .type-badge.buyer{ background:#eef2fb; color:#1a5aa1; }
+  .type-badge.seller{ background:#fdf3e3; color:#8a6d10; }
   .save-flash{ font-size:11.5px; color:var(--accent-dark); margin-left:8px; opacity:0; transition:opacity .3s; }
   .save-flash.show{ opacity:1; }
   .empty-row td{ text-align:center; color:var(--muted); padding:40px 14px; }
@@ -73,6 +79,22 @@
     .panel-wrap{ padding:14px; }
     th, td{ padding:9px 10px; font-size:12.5px; }
   }
+
+  /* ---------- Team tab ---------- */
+  .team-layout{ display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
+  @media (max-width:900px){ .team-layout{ grid-template-columns:1fr; } }
+  .team-card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
+  .team-card h3{ margin:0 0 4px; font-size:15px; }
+  .team-card p.sub{ color:var(--muted); font-size:12.5px; margin:0 0 16px; }
+  .team-card .field input, .team-card .field select{ width:100%; }
+  .password-row{ display:flex; gap:8px; }
+  .password-row input{ flex:1; }
+  .form-error{ background:#fdeceb; color:var(--danger); border-radius:8px; padding:9px 11px; font-size:12.5px; margin-bottom:12px; }
+  .role-badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11.5px; font-weight:700; text-transform:capitalize; }
+  .role-badge.admin{ background:#e8f2ee; color:var(--accent-dark); }
+  .role-badge.agent{ background:#f1f3f2; color:var(--muted); }
+  .team-result{ background:#f3f8f6; border:1px solid var(--line); border-radius:9px; padding:14px; margin-top:16px; font-size:12.5px; line-height:1.6; }
+  .team-result b{ display:block; margin-bottom:2px; }
 </style>
 </head>
 <body>
@@ -112,6 +134,8 @@
   <div class="tabs">
     <button class="tab-btn active" id="tab-listings-btn">Listings</button>
     <button class="tab-btn" id="tab-leads-btn">Leads</button>
+    <button class="tab-btn" id="tab-team-btn" hidden>Team</button>
+    <button class="tab-btn" id="tab-applications-btn" hidden>Applications</button>
   </div>
 
   <div class="panel-wrap">
@@ -129,8 +153,68 @@
       <div class="panel-header"><h2>Leads</h2><span class="count" id="leads-count"></span></div>
       <div class="scroll-x">
         <table>
-          <thead><tr><th>Name</th><th>Contact</th><th>Listing</th><th>Message</th><th>Status</th></tr></thead>
+          <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Listing / Details</th><th>Message</th><th>Status</th></tr></thead>
           <tbody id="leads-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="panel-team" hidden>
+      <div class="panel-header"><h2>Team</h2><span class="count" id="team-count"></span></div>
+      <div class="team-layout">
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+            <tbody id="team-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="team-card">
+          <h3>Add an agent</h3>
+          <p class="sub">Give them a login to Fieldsheet and this CRM.</p>
+          <div class="form-error" id="team-form-error" hidden></div>
+          <form id="add-agent-form">
+            <div class="field">
+              <label for="agent-name">Name</label>
+              <input id="agent-name" placeholder="Jordan Lee">
+            </div>
+            <div class="field">
+              <label for="agent-email">Email</label>
+              <input id="agent-email" type="email" placeholder="jordan@yourbrokerage.com">
+            </div>
+            <div class="field">
+              <label for="agent-role">Role</label>
+              <select id="agent-role">
+                <option value="agent" selected>Agent</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="agent-password">Temporary password</label>
+              <div class="password-row">
+                <input id="agent-password" placeholder="At least 6 characters">
+                <button type="button" class="btn-secondary" id="agent-generate-password-btn">Generate</button>
+              </div>
+            </div>
+            <button class="btn-primary" style="width:100%;" id="add-agent-btn" type="submit">Add Agent</button>
+          </form>
+          <div class="team-result" id="team-result" hidden>
+            <b id="team-result-name"></b>
+            <div>Email: <span id="team-result-email"></span></div>
+            <div>Password: <span id="team-result-password"></span></div>
+            <div id="team-result-note" style="margin-top:6px;color:var(--muted);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-applications" hidden>
+      <div class="panel-header"><h2>Applications</h2><span class="count" id="applications-count"></span></div>
+      <p style="color:var(--muted);font-size:12.5px;margin:-8px 0 14px;">Only visible to admins — submitted through "Join Our Team" on your public site.</p>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Position</th><th>Message</th><th>Status</th></tr></thead>
+          <tbody id="applications-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -143,6 +227,13 @@
   var SUPABASE_URL = 'https://ohtiuqghsmuvlthhvkcn.supabase.co';
   var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_0tz9RnGQB8yiEbpsumkwlw_QPRn-r6L';
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  // A second, independent client used ONLY to sign up a new agent's account
+  // (Team tab, admins only). Separate storage/session so creating that login
+  // never disturbs the admin's own signed-in session on the main client.
+  var sbSignup = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, storageKey: 'fieldsheet-crm-signup-throwaway' }
+  });
 
   function $(id){ return document.getElementById(id); }
   function show(id){
@@ -209,7 +300,12 @@
   function enterApp(){
     $('greeting-line').textContent = session.name || session.email;
     show('screen-app');
-    return loadListings().then(loadLeads);
+    $('tab-team-btn').hidden = session.role !== 'admin';
+    $('tab-applications-btn').hidden = session.role !== 'admin';
+    activateTab('listings');
+    var chain = loadListings().then(loadLeads);
+    if(session.role === 'admin') chain = chain.then(loadTeam).then(loadApplications);
+    return chain;
   }
 
   // ---------- Listings ----------
@@ -282,18 +378,33 @@
     return [l.address, l.city].filter(Boolean).join(', ') || 'Listing';
   }
 
+  // "Listing / Details" column means something different depending on which
+  // of the three public site forms the lead came from.
+  function leadDetails(l){
+    if(l.lead_type === 'seller') return l.address || '—';
+    if(l.lead_type === 'buyer') return l.has_agent ? 'Has an agent' : 'Needs an agent';
+    return listingLabel(l.listing_id);
+  }
+  function leadTypeLabel(type){
+    if(type === 'seller') return 'Seller';
+    if(type === 'buyer') return 'Buyer';
+    return 'Listing';
+  }
+
   function renderLeads(){
     var tbody = $('leads-tbody');
     $('leads-count').textContent = leads.length + (leads.length === 1 ? ' lead' : ' leads');
     if(!leads.length){
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No leads yet — these show up as soon as someone submits the "Request info" form on your public site.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No leads yet — these show up as soon as someone submits "Buy Your New Home," "List Your House," or requests info on a listing.</td></tr>';
       return;
     }
     tbody.innerHTML = leads.map(function(l){
+      var type = l.lead_type || 'listing';
       return '<tr>' +
         '<td class="row-primary">' + escapeHtml(l.name || '—') + '</td>' +
         '<td>' + escapeHtml(l.email || '') + (l.phone ? '<div class="row-sub">' + escapeHtml(l.phone) + '</div>' : '') + '</td>' +
-        '<td>' + escapeHtml(listingLabel(l.listing_id)) + '</td>' +
+        '<td><span class="type-badge ' + type + '">' + escapeHtml(leadTypeLabel(type)) + '</span></td>' +
+        '<td>' + escapeHtml(leadDetails(l)) + '</td>' +
         '<td class="msg-cell">' + escapeHtml(l.message || '—') + '</td>' +
         '<td>' +
           '<select class="status-select ' + l.status + '" data-id="' + l.id + '">' +
@@ -323,19 +434,172 @@
     });
   }
 
+  // ---------- Team (admins only) ----------
+  // This lives inside the CRM, not a separate page: once Matt sells the
+  // product to a brokerage and hands them one admin login (created via the
+  // platform admin tool), that admin should be able to bring on their own
+  // agents themselves, without asking Matt to do it via SQL or his own
+  // admin-only tool. Gated at the database level too (see schema.sql's
+  // "company admin can add agents to their own company" policy) -- a
+  // non-admin agent who somehow saw this tab still couldn't submit it.
+  var team = [];
+
+  function loadTeam(){
+    return sb.from('app_users').select('*').eq('company_id', session.companyId).then(function(res){
+      if(res.error){ console.warn('Could not load team:', res.error.message); return; }
+      team = (res.data || []).sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
+      renderTeam();
+    });
+  }
+
+  function renderTeam(){
+    var tbody = $('team-tbody');
+    $('team-count').textContent = team.length + (team.length === 1 ? ' person' : ' people');
+    if(!team.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No team members yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = team.map(function(u){
+      return '<tr>' +
+        '<td class="row-primary">' + escapeHtml(u.name || '—') + (u.id === session.userId ? ' <span class="row-sub">(you)</span>' : '') + '</td>' +
+        '<td>' + escapeHtml(u.email || '') + '</td>' +
+        '<td><span class="role-badge ' + u.role + '">' + escapeHtml(u.role) + '</span></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  $('agent-generate-password-btn').addEventListener('click', function(){
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    var pw = '';
+    for(var i = 0; i < 10; i++){ pw += chars.charAt(Math.floor(Math.random() * chars.length)); }
+    $('agent-password').value = pw;
+  });
+
+  function setAddAgentBusy(busy){
+    var btn = $('add-agent-btn');
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Adding…' : 'Add Agent';
+  }
+
+  $('add-agent-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('agent-name').value.trim();
+    var email = $('agent-email').value.trim();
+    var role = $('agent-role').value;
+    var password = $('agent-password').value.trim();
+
+    $('team-form-error').hidden = true;
+    $('team-result').hidden = true;
+
+    if(!name || !email || !password){
+      $('team-form-error').textContent = 'Please fill in every field.';
+      $('team-form-error').hidden = false;
+      return;
+    }
+    if(password.length < 6){
+      $('team-form-error').textContent = 'Password needs to be at least 6 characters.';
+      $('team-form-error').hidden = false;
+      return;
+    }
+
+    setAddAgentBusy(true);
+    var companyId = session.companyId;
+
+    sbSignup.auth.signUp({ email: email, password: password }).then(function(signUpRes){
+      if(signUpRes.error) throw new Error('Could not create that login: ' + signUpRes.error.message);
+      if(!signUpRes.data || !signUpRes.data.user) throw new Error('Sign-up did not return a new user.');
+      var newUserId = signUpRes.data.user.id;
+      return sb.from('app_users').insert({ id: newUserId, company_id: companyId, name: name, email: email, role: role });
+    }).then(function(insertRes){
+      if(insertRes.error) throw new Error('Created the login, but could not add them to your team: ' + insertRes.error.message);
+      $('team-result-name').textContent = name + ' is ready';
+      $('team-result-email').textContent = email;
+      $('team-result-password').textContent = password;
+      $('team-result-note').textContent = 'Share these with them so they can log in to Fieldsheet and the CRM.';
+      $('team-result').hidden = false;
+      $('add-agent-form').reset();
+      return loadTeam();
+    }).catch(function(err){
+      $('team-form-error').textContent = (err && err.message) ? err.message : 'Something went wrong.';
+      $('team-form-error').hidden = false;
+    }).finally(function(){
+      setAddAgentBusy(false);
+    });
+  });
+
+  // ---------- Applications (admins/HR only) ----------
+  // Unlike leads (any agent can see and work them), a job application is
+  // only relevant to whoever's hiring -- gated the same way as Team, both in
+  // the UI (tab only shown to admins) and at the database level (see
+  // schema.sql's "company admin can manage job applications" policy, which
+  // is admin-only unlike the "own company leads" policy every agent gets).
+  var LEAD_APP_STATUSES = ['new', 'reviewing', 'interviewing', 'hired', 'rejected'];
+  var applications = [];
+
+  function loadApplications(){
+    return sb.from('job_applications').select('*').eq('company_id', session.companyId).then(function(res){
+      if(res.error){ console.warn('Could not load applications:', res.error.message); return; }
+      applications = (res.data || []).sort(function(a, b){ return new Date(b.created_at) - new Date(a.created_at); });
+      renderApplications();
+    });
+  }
+
+  function renderApplications(){
+    var tbody = $('applications-tbody');
+    $('applications-count').textContent = applications.length + (applications.length === 1 ? ' application' : ' applications');
+    if(!applications.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No applications yet — these show up as soon as someone submits "Join Our Team" on your public site.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = applications.map(function(a){
+      return '<tr>' +
+        '<td class="row-primary">' + escapeHtml(a.name || '—') + '</td>' +
+        '<td>' + escapeHtml(a.email || '') + (a.phone ? '<div class="row-sub">' + escapeHtml(a.phone) + '</div>' : '') + '</td>' +
+        '<td>' + escapeHtml(a.position || '—') + '</td>' +
+        '<td class="msg-cell">' + escapeHtml(a.message || '—') + '</td>' +
+        '<td>' +
+          '<select class="status-select ' + a.status + '" data-id="' + a.id + '">' +
+            LEAD_APP_STATUSES.map(function(s){ return '<option value="' + s + '"' + (s === a.status ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>'; }).join('') +
+          '</select>' +
+          '<span class="save-flash" id="app-flash-' + a.id + '">Saved</span>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(tbody.querySelectorAll('.status-select'), function(sel){
+      sel.addEventListener('change', function(){
+        var id = sel.getAttribute('data-id');
+        var newStatus = sel.value;
+        sel.className = 'status-select ' + newStatus;
+        sb.from('job_applications').update({ status: newStatus }).eq('id', id).then(function(res){
+          if(res.error){ console.warn('Application status update failed:', res.error.message); return; }
+          var a = applications.find(function(x){ return x.id === id; });
+          if(a) a.status = newStatus;
+          var flash = $('app-flash-' + id);
+          if(flash){
+            flash.classList.add('show');
+            setTimeout(function(){ flash.classList.remove('show'); }, 1200);
+          }
+        });
+      });
+    });
+  }
+
   // ---------- Tabs ----------
-  $('tab-listings-btn').addEventListener('click', function(){
-    $('tab-listings-btn').classList.add('active');
-    $('tab-leads-btn').classList.remove('active');
-    $('panel-listings').hidden = false;
-    $('panel-leads').hidden = true;
-  });
-  $('tab-leads-btn').addEventListener('click', function(){
-    $('tab-leads-btn').classList.add('active');
-    $('tab-listings-btn').classList.remove('active');
-    $('panel-leads').hidden = false;
-    $('panel-listings').hidden = true;
-  });
+  function activateTab(name){
+    $('tab-listings-btn').classList.toggle('active', name === 'listings');
+    $('tab-leads-btn').classList.toggle('active', name === 'leads');
+    $('tab-team-btn').classList.toggle('active', name === 'team');
+    $('tab-applications-btn').classList.toggle('active', name === 'applications');
+    $('panel-listings').hidden = name !== 'listings';
+    $('panel-leads').hidden = name !== 'leads';
+    $('panel-team').hidden = name !== 'team';
+    $('panel-applications').hidden = name !== 'applications';
+  }
+  $('tab-listings-btn').addEventListener('click', function(){ activateTab('listings'); });
+  $('tab-leads-btn').addEventListener('click', function(){ activateTab('leads'); });
+  $('tab-team-btn').addEventListener('click', function(){ activateTab('team'); });
+  $('tab-applications-btn').addEventListener('click', function(){ activateTab('applications'); });
 
   // ---------- Boot ----------
   function boot(){

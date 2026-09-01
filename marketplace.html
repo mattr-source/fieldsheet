@@ -38,6 +38,49 @@
   .brand-mark img{ width:100%; height:100%; object-fit:cover; }
   .header-tag{ color:var(--muted); font-size:13px; font-weight:500; }
 
+  /* ---------- Site menu ---------- */
+  .menu-wrap{ position:relative; }
+  .menu-btn{
+    background:#fff; border:1px solid var(--line); border-radius:9px; padding:9px 14px; font-size:13.5px;
+    font-weight:600; cursor:pointer; display:flex; align-items:center; gap:7px; color:var(--ink);
+  }
+  .menu-btn:hover{ background:#fafcfb; }
+  .menu-icon{ font-size:15px; line-height:1; }
+  .menu-dropdown{
+    position:absolute; top:calc(100% + 8px); right:0; background:#fff; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 12px 30px rgba(20,30,25,.14); min-width:210px; padding:6px; z-index:30;
+  }
+  .menu-item{
+    display:block; width:100%; text-align:left; background:none; border:none; padding:11px 12px; border-radius:8px;
+    font-size:14px; font-weight:600; color:var(--ink); cursor:pointer;
+  }
+  .menu-item:hover{ background:#f1f5f3; }
+  .menu-item.muted{ color:var(--muted); font-weight:500; font-size:12.5px; border-top:1px solid var(--line); margin-top:4px; padding-top:12px; border-radius:0; }
+
+  /* ---------- Modals (List Your House / Join Our Team) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(15,25,20,.5); display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:40;
+  }
+  .modal-card{
+    background:#fff; border-radius:var(--radius); padding:24px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .modal-header h3{ margin:0; font-size:18px; }
+  .modal-close{ background:none; border:none; font-size:22px; line-height:1; color:var(--muted); cursor:pointer; padding:0 4px; }
+  .modal-sub{ color:var(--muted); font-size:13.5px; margin:0 0 16px; }
+  .modal-error{ background:#fdeceb; color:#a1281a; border-radius:9px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
+  .modal-success{ background:#eaf6ee; color:#1f6a3a; border-radius:9px; padding:14px; font-size:14px; font-weight:600; }
+  .modal-card form{ display:flex; flex-direction:column; gap:10px; }
+  .modal-card input, .modal-card textarea{
+    padding:11px 12px; border:1px solid var(--line); border-radius:9px; font-size:14px; font-family:inherit; resize:vertical;
+  }
+  .modal-card form button{
+    background:var(--accent); color:#fff; border:none; border-radius:9px; padding:12px; font-size:14.5px; font-weight:700; cursor:pointer;
+  }
+  .modal-card form button:disabled{ opacity:.6; cursor:default; }
+
   /* ---------- Hero / search ---------- */
   .hero{
     background:linear-gradient(180deg,#0f5c4c 0%,#0b4638 100%); color:#fff;
@@ -138,8 +181,85 @@
     <span class="brand-mark" id="brand-mark">H</span>
     <span id="brand-name">Loading…</span>
   </div>
-  <span class="header-tag">Listed by our agents</span>
+  <div class="menu-wrap">
+    <button class="menu-btn" id="menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
+      <span class="menu-icon">☰</span> Menu
+    </button>
+    <div class="menu-dropdown" id="menu-dropdown" hidden>
+      <button type="button" class="menu-item" id="menu-buy-home-btn">Buy Your New Home</button>
+      <button type="button" class="menu-item" id="menu-list-house-btn">List Your House</button>
+      <button type="button" class="menu-item" id="menu-join-team-btn">Join Our Team</button>
+      <button type="button" class="menu-item" id="menu-employee-login-btn">Employee Login</button>
+    </div>
+  </div>
 </header>
+
+<!-- BUY YOUR NEW HOME -->
+<div class="modal-overlay" id="buy-modal-overlay" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Buy Your New Home</h3>
+      <button type="button" class="modal-close" id="buy-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <p class="modal-sub">Tell us what you're looking for and one of our agents will reach out.</p>
+    <div class="modal-error" id="buy-form-error" hidden></div>
+    <form id="buy-form">
+      <input id="buy-name" placeholder="Your name" required>
+      <input id="buy-email" type="email" placeholder="Email address" required>
+      <input id="buy-phone" placeholder="Phone (optional)">
+      <select id="buy-has-agent" required>
+        <option value="" disabled selected>Are you already working with an agent?</option>
+        <option value="yes">Yes, I have an agent</option>
+        <option value="no">No, I need an agent</option>
+      </select>
+      <textarea id="buy-message" rows="3" placeholder="What are you looking for? (optional)"></textarea>
+      <button type="submit" id="buy-submit-btn">Submit</button>
+    </form>
+    <div class="modal-success" id="buy-success" hidden>Thanks! One of our agents will be in touch soon.</div>
+  </div>
+</div>
+
+<!-- LIST YOUR HOUSE -->
+<div class="modal-overlay" id="sell-modal-overlay" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>List Your House</h3>
+      <button type="button" class="modal-close" id="sell-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <p class="modal-sub">Tell us a bit about your property and one of our agents will reach out.</p>
+    <div class="modal-error" id="sell-form-error" hidden></div>
+    <form id="sell-form">
+      <input id="sell-name" placeholder="Your name" required>
+      <input id="sell-email" type="email" placeholder="Email address" required>
+      <input id="sell-phone" placeholder="Phone (optional)">
+      <input id="sell-address" placeholder="Property address" required>
+      <textarea id="sell-message" rows="3" placeholder="Tell us a bit about your home (optional)"></textarea>
+      <button type="submit" id="sell-submit-btn">Submit</button>
+    </form>
+    <div class="modal-success" id="sell-success" hidden>Thanks! One of our agents will be in touch soon.</div>
+  </div>
+</div>
+
+<!-- JOIN OUR TEAM -->
+<div class="modal-overlay" id="apply-modal-overlay" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Join Our Team</h3>
+      <button type="button" class="modal-close" id="apply-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <p class="modal-sub">Interested in joining us? Tell us a bit about yourself.</p>
+    <div class="modal-error" id="apply-form-error" hidden></div>
+    <form id="apply-form">
+      <input id="apply-name" placeholder="Your name" required>
+      <input id="apply-email" type="email" placeholder="Email address" required>
+      <input id="apply-phone" placeholder="Phone (optional)">
+      <input id="apply-position" placeholder="Position you're interested in (optional)">
+      <textarea id="apply-message" rows="3" placeholder="Tell us about your experience"></textarea>
+      <button type="submit" id="apply-submit-btn">Submit Application</button>
+    </form>
+    <div class="modal-success" id="apply-success" hidden>Thanks for applying! Our team will review and follow up.</div>
+  </div>
+</div>
 
 <!-- LISTINGS -->
 <section id="screen-list" class="screen active">
@@ -400,6 +520,7 @@
     sb.from('leads').insert({
       company_id: company.id,
       listing_id: currentListing.id,
+      lead_type: 'listing',
       name: $('lead-name').value.trim(),
       email: $('lead-email').value.trim(),
       phone: $('lead-phone').value.trim() || null,
@@ -416,6 +537,184 @@
     }).finally(function(){
       btn.disabled = false;
       btn.textContent = 'Request info';
+    });
+  });
+
+  // ---------- Site menu ----------
+  function closeMenu(){
+    $('menu-dropdown').hidden = true;
+    $('menu-btn').setAttribute('aria-expanded', 'false');
+  }
+  $('menu-btn').addEventListener('click', function(e){
+    e.stopPropagation();
+    var willOpen = $('menu-dropdown').hidden;
+    $('menu-dropdown').hidden = !willOpen;
+    $('menu-btn').setAttribute('aria-expanded', String(willOpen));
+  });
+  document.addEventListener('click', function(e){
+    if(!$('menu-dropdown').hidden && !$('menu-dropdown').contains(e.target) && e.target !== $('menu-btn')){
+      closeMenu();
+    }
+  });
+
+  function openModal(id){ $(id).hidden = false; }
+  function closeModal(id){ $(id).hidden = true; }
+
+  function resetBuyModal(){
+    $('buy-form').reset();
+    $('buy-form').hidden = false;
+    $('buy-form-error').hidden = true;
+    $('buy-success').hidden = true;
+  }
+  function resetSellModal(){
+    $('sell-form').reset();
+    $('sell-form').hidden = false;
+    $('sell-form-error').hidden = true;
+    $('sell-success').hidden = true;
+  }
+  function resetApplyModal(){
+    $('apply-form').reset();
+    $('apply-form').hidden = false;
+    $('apply-form-error').hidden = true;
+    $('apply-success').hidden = true;
+  }
+
+  $('menu-buy-home-btn').addEventListener('click', function(){
+    closeMenu();
+    resetBuyModal();
+    openModal('buy-modal-overlay');
+  });
+  $('menu-list-house-btn').addEventListener('click', function(){
+    closeMenu();
+    resetSellModal();
+    openModal('sell-modal-overlay');
+  });
+  $('menu-join-team-btn').addEventListener('click', function(){
+    closeMenu();
+    resetApplyModal();
+    openModal('apply-modal-overlay');
+  });
+  $('menu-employee-login-btn').addEventListener('click', function(){
+    closeMenu();
+    location.href = 'crm.html';
+  });
+
+  $('buy-modal-close').addEventListener('click', function(){ closeModal('buy-modal-overlay'); });
+  $('sell-modal-close').addEventListener('click', function(){ closeModal('sell-modal-overlay'); });
+  $('apply-modal-close').addEventListener('click', function(){ closeModal('apply-modal-overlay'); });
+  ['buy-modal-overlay', 'sell-modal-overlay', 'apply-modal-overlay'].forEach(function(id){
+    $(id).addEventListener('click', function(e){ if(e.target === $(id)) closeModal(id); });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    ['buy-modal-overlay', 'sell-modal-overlay', 'apply-modal-overlay'].forEach(function(id){
+      if(!$(id).hidden) closeModal(id);
+    });
+  });
+
+  // ---------- Buy Your New Home -> a general buyer lead (not tied to any one listing) ----------
+  $('buy-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!company){
+      $('buy-form-error').textContent = 'This site isn\'t fully set up yet — please try again shortly.';
+      $('buy-form-error').hidden = false;
+      return;
+    }
+    var btn = $('buy-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    $('buy-form-error').hidden = true;
+    sb.from('leads').insert({
+      company_id: company.id,
+      listing_id: null,
+      lead_type: 'buyer',
+      has_agent: $('buy-has-agent').value === 'yes',
+      name: $('buy-name').value.trim(),
+      email: $('buy-email').value.trim(),
+      phone: $('buy-phone').value.trim() || null,
+      message: $('buy-message').value.trim() || null,
+      status: 'new'
+    }).then(function(res){
+      if(res.error){
+        $('buy-form-error').textContent = 'Something went wrong sending your info. Please try again.';
+        $('buy-form-error').hidden = false;
+        return;
+      }
+      $('buy-form').hidden = true;
+      $('buy-success').hidden = false;
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = 'Submit';
+    });
+  });
+
+  // ---------- List Your House -> a seller lead any agent can see in the CRM ----------
+  $('sell-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!company){
+      $('sell-form-error').textContent = 'This site isn\'t fully set up yet — please try again shortly.';
+      $('sell-form-error').hidden = false;
+      return;
+    }
+    var btn = $('sell-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    $('sell-form-error').hidden = true;
+    sb.from('leads').insert({
+      company_id: company.id,
+      listing_id: null,
+      lead_type: 'seller',
+      address: $('sell-address').value.trim(),
+      name: $('sell-name').value.trim(),
+      email: $('sell-email').value.trim(),
+      phone: $('sell-phone').value.trim() || null,
+      message: $('sell-message').value.trim() || null,
+      status: 'new'
+    }).then(function(res){
+      if(res.error){
+        $('sell-form-error').textContent = 'Something went wrong sending your info. Please try again.';
+        $('sell-form-error').hidden = false;
+        return;
+      }
+      $('sell-form').hidden = true;
+      $('sell-success').hidden = false;
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = 'Submit';
+    });
+  });
+
+  // ---------- Join Our Team -> a job application, admin/HR-only in the CRM ----------
+  $('apply-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!company){
+      $('apply-form-error').textContent = 'This site isn\'t fully set up yet — please try again shortly.';
+      $('apply-form-error').hidden = false;
+      return;
+    }
+    var btn = $('apply-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    $('apply-form-error').hidden = true;
+    sb.from('job_applications').insert({
+      company_id: company.id,
+      name: $('apply-name').value.trim(),
+      email: $('apply-email').value.trim(),
+      phone: $('apply-phone').value.trim() || null,
+      position: $('apply-position').value.trim() || null,
+      message: $('apply-message').value.trim() || null,
+      status: 'new'
+    }).then(function(res){
+      if(res.error){
+        $('apply-form-error').textContent = 'Something went wrong sending your application. Please try again.';
+        $('apply-form-error').hidden = false;
+        return;
+      }
+      $('apply-form').hidden = true;
+      $('apply-success').hidden = false;
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = 'Submit Application';
     });
   });
 
