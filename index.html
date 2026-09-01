@@ -313,6 +313,10 @@
   .room-chip.active{background:var(--accent-wash);border-color:var(--accent);color:var(--accent-strong);font-weight:600;}
   .btn-secondary:disabled{opacity:.45;cursor:not-allowed;}
 
+  .description-actions{display:flex;align-items:center;gap:10px;margin:2px 0 22px;}
+  .save-flash{font-size:12px;color:var(--accent-strong);opacity:0;transition:opacity .3s;}
+  .save-flash.show{opacity:1;}
+
   .review-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;}
   .review-actions .btn-secondary{flex:1 1 auto;min-width:104px;}
   .delete-row{margin-top:10px;}
@@ -777,9 +781,14 @@
           </span>
         </button>
 
-        <div class="soon-panel">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          <div>The listing description is next — everything else already works.</div>
+        <div class="section-label" style="margin-top:18px;">Description</div>
+        <div class="field">
+          <textarea id="review-description" rows="5" placeholder="Write a few sentences that would make a buyer want to see this home in person…"></textarea>
+          <div class="field-hint">This is what shows on the public listing page.</div>
+        </div>
+        <div class="description-actions">
+          <button type="button" class="btn-secondary" id="review-description-save-btn">Save Description</button>
+          <span class="save-flash" id="description-save-flash">Saved</span>
         </div>
 
         <div class="review-actions">
@@ -949,6 +958,7 @@
       property_type: listing.propertyType || null,
       features: (listing.features && listing.features.selected) || [],
       feature_notes: (listing.features && listing.features.notes) || null,
+      description: listing.description || null,
       room_photos: listing.roomPhotos || {},
       updated_at: new Date().toISOString()
     };
@@ -973,7 +983,8 @@
       lotUnit: row.lot_unit || 'Acres',
       price: row.price,
       roomPhotos: row.room_photos || {},
-      features: { selected: row.features || [], notes: row.feature_notes || '' }
+      features: { selected: row.features || [], notes: row.feature_notes || '' },
+      description: row.description || ''
     };
   }
 
@@ -1860,6 +1871,8 @@
     $('review-address').textContent = l.street + (l.unit ? (', ' + l.unit) : '');
     $('review-cityline').textContent = cityline;
     $('review-price').textContent = fmtMoney(l.price);
+    $('review-description').value = l.description || '';
+    $('description-save-flash').classList.remove('show');
     $('review-chips').innerHTML =
       (l.propertyType ? '<span class="chip">' + escapeHtml(l.propertyType) + '</span>' : '') +
       '<span class="chip status">Draft</span>';
@@ -1909,6 +1922,18 @@
   $('review-features-btn').addEventListener('click', function(){
     wizardCancelTarget = 'review';
     openFeaturesPage();
+  });
+
+  $('review-description-save-btn').addEventListener('click', function(){
+    var listing = listings.find(function(x){ return x.id === currentId; });
+    if(!listing) return;
+    listing.description = $('review-description').value.trim();
+    listing.updatedAt = Date.now();
+    persistListings();
+    syncListingToCloud(listing);
+    var flash = $('description-save-flash');
+    flash.classList.add('show');
+    setTimeout(function(){ flash.classList.remove('show'); }, 1500);
   });
 
   $('review-delete-btn').addEventListener('click', function(){

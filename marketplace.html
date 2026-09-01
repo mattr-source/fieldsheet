@@ -111,6 +111,7 @@
   .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
   .chip{ background:#eaf3ef; color:var(--accent-dark); border-radius:999px; padding:6px 12px; font-size:12.5px; font-weight:600; }
   .detail-notes{ font-size:14px; line-height:1.55; color:#37423d; margin-bottom:24px; }
+  .detail-description{ font-size:14.5px; line-height:1.65; color:#37423d; margin:16px 0; }
 
   .contact-card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
   .contact-card h3{ margin:0 0 4px; font-size:17px; }
@@ -194,6 +195,7 @@
       <div>
         <div class="detail-price" id="detail-price"></div>
         <div class="detail-address" id="detail-address"></div>
+        <div class="detail-description" id="detail-description" hidden></div>
         <div class="detail-specs" id="detail-specs"></div>
         <div class="chip-row" id="detail-features"></div>
         <div class="detail-notes" id="detail-notes"></div>
@@ -348,6 +350,13 @@
     var addr = [l.address, l.unit].filter(Boolean).join(', ');
     var cityline = [l.city, l.state].filter(Boolean).join(', ') + (l.zip ? (' ' + l.zip) : '');
     $('detail-address').textContent = [addr, cityline].filter(Boolean).join(' — ');
+
+    if(l.description){
+      $('detail-description').textContent = l.description;
+      $('detail-description').hidden = false;
+    } else {
+      $('detail-description').hidden = true;
+    }
 
     var specs = [];
     if(l.bedrooms != null) specs.push(['Bedrooms', l.bedrooms]);
